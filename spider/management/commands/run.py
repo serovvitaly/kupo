@@ -23,7 +23,7 @@ def get_urls():
             urls_str = []
             for url_node in urls_nodels_list:
                 urls_str.append(url_node.firstChild.nodeValue.strip())
-            cache = mem_client.set(url,  pickle.dumps(urls_str))
+            cache = mem_client.set(url,  pickle.dumps(urls_str), 60*15)
             return urls_str
 
 
