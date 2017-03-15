@@ -5,9 +5,18 @@ import urllib.request
 class AbstractOffer:
     """
     Базовый класс для всех моделей офферов
+    is_valid - правильно ли заполнен оффер
+    title - заголовок оффера
+    revision_at - время ревизии
     """
     def __init__(self):
-        pass
+        self.url = None
+        self.is_valid = False
+        self.title = None
+        self.rules = None
+        self.likes_count = None
+        self.purchases_count = None
+        self.revision_at = None
 
 
 class AbstractProvider:
