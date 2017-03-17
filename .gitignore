@@ -21,5 +21,4 @@ build/
 tests/report/
 sitemap.xml
 kupo.db
-offers/migrations/
-spider/migrations/
+migrations/
