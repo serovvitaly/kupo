@@ -7,7 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         parser = Parser()
-        parser.execute()
+        parser.pull_offers()
         return
 
         print('Parsing...')

@@ -4,7 +4,8 @@ biglion.ru
 
 import re
 import pickle
-import datetime
+import time
+from datetime import datetime, timezone
 import urllib.request
 
 from xml.dom import minidom
@@ -12,7 +13,6 @@ from urllib.parse import urlparse
 from models.base import AbstractOffer, AbstractProvider
 from pymemcache.client.base import Client as MemClient
 
-import re
 import lxml.etree as etree
 
 from io import StringIO
@@ -36,6 +36,12 @@ class ContentDispatcher:
         if st == '':
             return None
         return st
+
+    def get_values_by_re(self, pattern):
+        ms = re.search(pattern, self.content)
+        if ms is None:
+            return None
+        return ms.groups()
 
     def get_title(self):
         ptrn = r'<h1 class="header" id="headerTitle">([\s\S]+?)</h1>'
@@ -79,12 +85,96 @@ class ContentDispatcher:
         content = (''.join(content_list)).strip()
         return content
 
+    def get_coupon_expiration_date(self):
+        ptrn = r'<li>Купон действует <span style="font-weight: bold;">до&nbsp;([\d]+)\.([\d]+)\.([\d]+)</span></li>'
+        values = self.get_values_by_re(ptrn)
+        if values is None:
+            return None
+        return datetime(
+            day=int(values[0]),
+            month=int(values[1]),
+            year=int(values[2]),
+            tzinfo=timezone.utc
+        )
+
+    def get_coupon_beginning_usage_date(self):
+        ptrn = r'<li class="important"><span>Купон можно использовать с ([\d]+)\.([\d]+)\.([\d]+). </span></li>'
+        values = self.get_values_by_re(ptrn)
+        if values is None:
+            return None
+        return datetime(
+            day=int(values[0]),
+            month=int(values[1]),
+            year=int(values[2]),
+            tzinfo=timezone.utc
+        )
+
+    def get_description(self):
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(self.content), parser)
+        r = tree.xpath('//div[@class="description-load one_multi_text"]')
+        if len(r) < 1:
+            return None
+        base_el = r[0]
+        content_list = []
+        for child_el in base_el.getchildren():
+            child_ctn = etree.tostring(child_el, pretty_print=True, method="html").decode('utf8')
+            content_list.append(child_ctn)
+        content = (''.join(content_list)).strip()
+        return content
+
+    def get_items(self):
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(self.content), parser)
+        blocks_els_list = tree.xpath('//div[@class="modal_block_wrap"]/div[@class="modal_hidden"]/div[@class="modal_block"]')
+        if len(blocks_els_list) < 1:
+            return None
+        items = []
+        for block_el in blocks_els_list:
+            modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
+            purchases_count = re.search('куплено ([\d]+)', modal_2.text.strip())
+            purchases_count = purchases_count.group(1)
+
+            modal_3 = block_el.find('div[@class="modal_3"]')
+            link_el = modal_3.find('a')
+            purchase_url = None
+            offer_item_title = None
+            if link_el is not None:
+                purchase_url = link_el.get('href')
+                offer_item_title = link_el.text.strip()
+
+            modal_discount = modal_3.findall('div[@class="description_modal_discount"]/b/em')
+            discount_value = re.search('([\d]+)', modal_discount[0].text.strip()).group(1)
+            price_value = re.search('([\d]+)', modal_discount[1].text.strip()).group(1)
+
+            offer_item = type('offer_item', (object,), {})()
+
+            offer_item.purchases_count = purchases_count
+            offer_item.purchase_url = purchase_url
+            offer_item.offer_item_title = offer_item_title
+            offer_item.discount_value = discount_value
+            offer_item.price_value = price_value
+
+            items.append(offer_item)
+
+        return items
+
+
+    def get_expiration_date(self):
+        ptrn = r'<div class="goTimer countdown-timer time" data-ts="([\d]+)"></div>'
+        value = self.get_value_by_re(ptrn)
+        if value is None:
+            return None
+        ts = time.time()
+        return datetime.fromtimestamp(ts+int(value))
+
+
 
 class Offer(AbstractOffer):
     pass
 
 
-class Provider(AbstractProvider):
+class ContentProvider(AbstractProvider):
 
     def get_urls(self):
         """
@@ -136,6 +226,20 @@ class Provider(AbstractProvider):
         offer.purchases_count = content_dispatcher.get_purchases_count()
         offer.rules = content_dispatcher.get_rules()
 
+    def get_offer_structure(self, content):
+        offer_structure = type('offer_structure', (object,), {})()
+        content_dispatcher = ContentDispatcher(content)
+        offer_structure.title = content_dispatcher.get_title()
+        offer_structure.likes_count = content_dispatcher.get_likes_count()
+        offer_structure.purchases_count = content_dispatcher.get_purchases_count()
+        offer_structure.rules = content_dispatcher.get_rules()
+        offer_structure.expiration_date = content_dispatcher.get_expiration_date()
+        offer_structure.coupon_expiration_date = content_dispatcher.get_coupon_expiration_date()
+        offer_structure.coupon_beginning_usage_date = content_dispatcher.get_coupon_beginning_usage_date()
+        offer_structure.description = content_dispatcher.get_description()
+        offer_structure.items = content_dispatcher.get_items()
+        return offer_structure
+
     def all(self):
         urls = self.get_urls()
         if urls is None:
@@ -151,7 +255,7 @@ class Provider(AbstractProvider):
             content = self.get_content_by_url(url)
             offer = Offer()
             offer.url = url
-            offer.revision_at = datetime.datetime.now()
+            offer.revision_at = datetime.now()
             self.fill_offer_from_content(offer, content)
             offers.append(offer)
         if len(offers) < 1:
