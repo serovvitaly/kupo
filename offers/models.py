@@ -1,6 +1,14 @@
 from django.db import models
 
 
+STATUS_CHOICES = (
+    ('d', 'Черновик'),
+    ('p', 'Опубликовано'),
+    ('w', 'Скрыто'),
+)
+
+
+
 class Offer(models.Model):
     class Meta:
         db_table = 'offers'
@@ -12,6 +20,7 @@ class Offer(models.Model):
     expiration_date = models.DateTimeField(blank=True, null=True)
     coupon_expiration_date = models.DateTimeField()
     coupon_beginning_usage_date = models.DateTimeField()
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, null=True)
 
 
 
@@ -19,7 +28,7 @@ class OfferItem(models.Model):
     class Meta:
         db_table = 'offers_items'
     title = models.CharField(max_length=500)
-    purchases_count = models.IntegerField()
+    #purchases_count = models.IntegerField()
     purchase_url = models.CharField(max_length=500, blank=True, null=True)
     discount_value = models.FloatField()
     price_value = models.FloatField()

@@ -6,16 +6,27 @@ from progress.bar import Bar
 import urllib.request
 from offers.models import Offer, OfferItem
 
+from pymemcache.client.base import Client as MemClient
+mem_client = MemClient(('localhost', 11211))
+
 
 class Parser:
 
     def __init__(self):
         self.content_providers_list = {}
 
-    def get_content_by_url(self, url):
+
+    def get_content_by_url(self, url, use_cache=False):
+        if use_cache is True:
+            cache = mem_client.get(url)
+            if cache is not None:
+                return cache.decode('utf8')
         request = urllib.request.Request(url)
         with urllib.request.urlopen(request) as f:
-            return f.read().decode('utf-8')
+            content = f.read()
+            mem_client.set(url, content, 60 * 60)
+            return content.decode('utf8')
+
 
     def get_content_provider(self, name, key=None):
         if key is None:
@@ -28,6 +39,7 @@ class Parser:
             self.content_providers_list[key] = content_provider
         return self.content_providers_list[key]
 
+
     def fill_offer_by_url(self, offer, url):
         #content_provider = Provider()
         #content = content_provider.get_content_by_url(url)
@@ -35,12 +47,54 @@ class Parser:
         pass
 
 
+    def get_urls_all(self, section):
+        base_url = 'http://www.biglion.ru/'+section+'/'
+        content_provider = self.get_content_provider('biglion')
+        first_page_content = self.get_content_by_url(base_url, use_cache=True)
+        first_page_structure = content_provider.get_list_page_structure(first_page_content)
+        if first_page_structure.total_pages is None:
+            return
+        urls = first_page_structure.urls_list
+        for page in range(2, first_page_structure.total_pages + 1):
+            page_url = base_url + '?page=' + str(page)
+            #print(page_url)
+            page_content = self.get_content_by_url(page_url, use_cache=True)
+            page_structure = content_provider.get_list_page_structure(page_content)
+            urls += page_structure.urls_list
+
+        result_urls = []
+        for url in urls:
+            if url in result_urls:
+                continue
+            result_urls.append(url)
+        return  result_urls
+
+
+    def pull_urls(self):
+        urls = []
+        urls += self.get_urls_all('services')
+        urls += self.get_urls_all('hotels')
+        urls += self.get_urls_all('tours')
+        urls += self.get_urls_all('services/goods')
+
+        bar = Bar('Processing', max=len(urls))
+        for url in urls:
+            offer_url = OfferUrl()
+            offer_url.url = url
+            offer_url.offer_provider_id = 1
+            offer_url.save()
+            bar.next()
+        bar.finish()
+
+
     def pull_offers(self):
         content_provider = self.get_content_provider('biglion')
-        offers_urls_list = OfferUrl.objects.all()
-        for offer_url in offers_urls_list[0:100]:
-            print(offer_url.url)
-            content = self.get_content_by_url(offer_url.url)
+        offers_urls_list = OfferUrl.objects.all()[280:1000]
+        bar = Bar('Processing', max=len(offers_urls_list))
+        for offer_url in offers_urls_list:
+            #print(offer_url.url)
+            bar.next()
+            content = self.get_content_by_url(offer_url.url, use_cache=True)
             offer_structure = content_provider.get_offer_structure(content)
             if offer_structure.title is None:
                 continue
@@ -55,7 +109,21 @@ class Parser:
             offer.coupon_beginning_usage_date = offer_structure.coupon_beginning_usage_date
             offer.save()
 
-            print(offer.pk)
+            #print(type(offer_structure.items))
+            for item_odj in offer_structure.items:
+                if item_odj.title is None:
+                    continue
+                offer_item = OfferItem()
+                offer_item.title = item_odj.title
+                offer_item.purchase_url = item_odj.purchase_url
+                offer_item.discount_value = item_odj.discount_value
+                offer_item.price_value = item_odj.price_value
+                offer_item.offer = offer
+                offer_item.save()
+
+        bar.finish()
+
+            #print(offer.pk)
 
 
     def execute(self):

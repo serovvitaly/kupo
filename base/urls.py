@@ -15,7 +15,12 @@ Including another URLconf
 """
 from django.conf.urls import url
 from django.contrib import admin
+from offers import views as OffersViews
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
+    url(r'^v1/', OffersViews.Version1View.as_view()),
+    url(r'^v2/', OffersViews.Version2View.as_view()),
+    url(r'^page/(?P<page_number>\d+)', OffersViews.IndexView.get_page),
+    url(r'^post/(?P<post_id>\d+)', OffersViews.PostView.as_view()),
 ]

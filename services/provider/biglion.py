@@ -7,20 +7,14 @@ import pickle
 import time
 from datetime import datetime, timezone
 import urllib.request
-
 from xml.dom import minidom
 from urllib.parse import urlparse
 from models.base import AbstractOffer, AbstractProvider
-from pymemcache.client.base import Client as MemClient
-
 import lxml.etree as etree
-
 from io import StringIO
 
+from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
-
-
-
 
 
 class ContentDispatcher:
@@ -128,7 +122,7 @@ class ContentDispatcher:
         tree = etree.parse(StringIO(self.content), parser)
         blocks_els_list = tree.xpath('//div[@class="modal_block_wrap"]/div[@class="modal_hidden"]/div[@class="modal_block"]')
         if len(blocks_els_list) < 1:
-            return None
+            return []
         items = []
         for block_el in blocks_els_list:
             modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
@@ -144,14 +138,16 @@ class ContentDispatcher:
                 offer_item_title = link_el.text.strip()
 
             modal_discount = modal_3.findall('div[@class="description_modal_discount"]/b/em')
+            if len(modal_discount) < 1:
+                continue
             discount_value = re.search('([\d]+)', modal_discount[0].text.strip()).group(1)
             price_value = re.search('([\d]+)', modal_discount[1].text.strip()).group(1)
 
             offer_item = type('offer_item', (object,), {})()
 
+            offer_item.title = offer_item_title
             offer_item.purchases_count = purchases_count
             offer_item.purchase_url = purchase_url
-            offer_item.offer_item_title = offer_item_title
             offer_item.discount_value = discount_value
             offer_item.price_value = price_value
 
@@ -166,7 +162,7 @@ class ContentDispatcher:
         if value is None:
             return None
         ts = time.time()
-        return datetime.fromtimestamp(ts+int(value))
+        return datetime.fromtimestamp(ts+int(value), tz=timezone.utc)
 
 
 
@@ -203,12 +199,19 @@ class ContentProvider(AbstractProvider):
         """
         Возвращает количество страниц в разделе, найденные в контенте
         """
-        matches = re.findall(r'<a href="/services/\?page=([\d]+)" data-id="[\d]+">[\d]+</a>', content)
+        mms = re.search(r'<div class="page_pavigation">([\s\S]+?)</div>', content)
+        if mms is None:
+            return None
+        matches = re.findall(r'<a href="/[^"]+/\?page=([\d]+)" data-id="[\d]+">[\d]+</a>', mms.group(1))
         if matches is None:
             return None
         matches = map(int, matches)
-        print(matches)
         return max(matches)
+
+    def get_urls_list(self, content):
+        ptrn = 'href="(http://www.biglion.ru/deals/[^"]+)"'
+        matches = re.findall(ptrn, content)
+        return matches
 
     def get_urls_from_content(self, content):
         """
@@ -225,6 +228,12 @@ class ContentProvider(AbstractProvider):
         offer.likes_count = content_dispatcher.get_likes_count()
         offer.purchases_count = content_dispatcher.get_purchases_count()
         offer.rules = content_dispatcher.get_rules()
+
+    def get_list_page_structure(self, content):
+        structure = type('offer_structure', (object,), {})()
+        structure.total_pages = self.get_total_pages(content)
+        structure.urls_list = self.get_urls_list(content)
+        return structure
 
     def get_offer_structure(self, content):
         offer_structure = type('offer_structure', (object,), {})()

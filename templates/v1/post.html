@@ -1,0 +1,36 @@
+{% extends layout %}
+
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block og_meta %}
+<meta property="og:title" content="{{ item.title }}" />
+<meta property="og:description" content="{{ item.annotation|striptags }}" />
+<meta property="og:type" content="article" />
+<meta property="og:image" content="{{ item.image }}" />
+{% endblock %}
+
+{% block center %}
+<h2 class="title">{{ item.title }}</h2>
+<hr>
+{% include 'widget/related-posts.html' %}
+{% if is_editor %}
+{% with True as is_fast_editor %}
+<div id="post-item-{{ item.id }}" class="{% if item.is_active %}toggle-0{% else %}toggle-1{% endif %}">
+{% include 'widget/editor-control.html' %}
+</div>
+{% endwith %}
+{% endif %}
+<div class="post-content">{{ post_content|safe }}</div>
+<hr>
+{% include 'widget/social-net-line.html' %}
+<hr>
+{% if item.source_base_url %}
+<p>
+    <a href="{{ item.source_url }}" class="btn btn-sm btn-default" target="_blank">
+        <strong>Источник:</strong> {{ item.source_base_url }}
+    </a>
+</p>
+{% endif %}
+{% include 'widget/related-posts.html' %}
+{% include 'widget/interesting-posts.html' %}
+{% endblock %}
