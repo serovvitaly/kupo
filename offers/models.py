@@ -12,7 +12,7 @@ STATUS_CHOICES = (
 class Offer(models.Model):
     class Meta:
         db_table = 'offers'
-    title = models.CharField(max_length=500)
+    title = models.CharField(max_length=300)
     #likes_count = models.IntegerField()
     #purchases_count = models.IntegerField()
     rules = models.TextField()
@@ -27,10 +27,17 @@ class Offer(models.Model):
 class OfferItem(models.Model):
     class Meta:
         db_table = 'offers_items'
-    title = models.CharField(max_length=500)
+    title = models.CharField(max_length=300)
     #purchases_count = models.IntegerField()
-    purchase_url = models.CharField(max_length=500, blank=True, null=True)
+    purchase_url = models.CharField(max_length=300, blank=True, null=True)
     discount_value = models.FloatField()
     price_value = models.FloatField()
     offer = models.ForeignKey('Offer')
 
+
+
+class OfferMedia(models.Model):
+    class Meta:
+        db_table = 'offers_media'
+    url = models.CharField(max_length=300)
+    offer = models.ForeignKey('Offer')

@@ -155,6 +155,17 @@ class ContentDispatcher:
 
         return items
 
+    def get_images(self):
+        #parser = etree.HTMLParser()
+        #tree = etree.parse(StringIO(self.content), parser)
+        images = []
+        base_image_matches = re.search(r'var image_big = "([^"]+)"', self.content)
+        if base_image_matches is not None:
+            images.append(base_image_matches.group(1))
+        images_matches = re.search(r'var photos_big = \[([^\]]+)\];', self.content)
+        if images_matches is not None:
+            images += re.findall(r"'([^']+)',", images_matches.group(1).strip())
+        return images
 
     def get_expiration_date(self):
         ptrn = r'<div class="goTimer countdown-timer time" data-ts="([\d]+)"></div>'
@@ -247,6 +258,7 @@ class ContentProvider(AbstractProvider):
         offer_structure.coupon_beginning_usage_date = content_dispatcher.get_coupon_beginning_usage_date()
         offer_structure.description = content_dispatcher.get_description()
         offer_structure.items = content_dispatcher.get_items()
+        offer_structure.images = content_dispatcher.get_images()
         return offer_structure
 
     def all(self):

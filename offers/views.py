@@ -6,6 +6,39 @@ from django.template import loader, Context
 
 
 
+def get_offers_value_objects_mini(offers_ids):
+    if type(offers_ids) is not list:
+        return []
+    if len(offers_ids) < 1:
+        return []
+    offers = Offer.objects.filter(id__in=offers_ids).all()
+
+    idx_offers = {offer.id: type('offer_dict', (object,), {**offer.__dict__, **{'images':[]}})() for offer in offers}
+
+    offers_media = OfferMedia.objects.filter(offer_id__in=offers_ids).order_by('offer_id').all()
+    for offer_media in offers_media:
+        if offer_media.offer_id not in idx_offers:
+            continue
+        idx_offer = idx_offers[offer_media.offer_id]
+        idx_offer.images.append(offer_media.url)
+
+    return list(idx_offers.values())
+
+
+def get_offer_value_object_full(offer_id):
+    try:
+        offer = Offer.objects.get(pk=offer_id)
+    except Offer.DoesNotExist:
+        return None
+    offer_dict = type('offer_dict', (object,), {**offer.__dict__, **{'images':[], 'items': []}})
+    offers_media = OfferMedia.objects.filter(offer_id__exact=offer_id).all()
+    offers_items = OfferItem.objects.filter(offer_id__exact=offer_id).all()
+    for offer_media in offers_media:
+        offer_dict.images.append(offer_media.url)
+    for offer_item in offers_items:
+        offer_dict.items.append(offer_item.__dict__)
+    return offer_dict
+
 
 class IndexView(generic.TemplateView):
     template_name = 'v1/index.html'
@@ -17,32 +50,32 @@ class IndexView(generic.TemplateView):
         #posts = Offer.objects.filter(status__exact='p').all()
         posts = Offer.objects.all()
         post_template = loader.get_template('v1/post-mini.html')
-        items_by_columns = []
-        column_index = 1
         page_items_count = 30
         items_from = (page_number - 1) * page_items_count
         items_to = items_from + page_items_count
-        for post in posts[items_from:items_to]:
-            post_content = post_template.render(Context({'item': post}))
-            items_by_columns.append(post_content)
-            if column_index > 2:
-                column_index = 0
-            column_index += 1
+        offers_ids = []
+        for offer in posts[items_from:items_to]:
+            #post_content = post_template.render(Context({'item': post}))
+            offers_ids.append(offer.id)
+        offers_ids = [3168,3169,3170,3171,3172,3173,3174,3175,3176,3177,3178,3179,]
+
+        offers_val_objs = get_offers_value_objects_mini(offers_ids)
+        items_content = []
+        for offer_val_obj in offers_val_objs:
+            context = Context({
+                'offer': offer_val_obj,
+                'images_range': range(1, 5),
+            })
+            items_content.append(post_template.render(context))
         return JsonResponse({
             'success': True,
             'page_number': page_number,
-            'items': items_by_columns,
+            'items': items_content,
+
         })
 
     def get_context_data(self, **kwargs):
-        posts = Offer.objects.filter(status__exact='p').all()
         items_by_columns = {1: [], 2: [], 3: []}
-        column_index = 1
-        for post in posts[0:30]:
-            #items_by_columns[column_index].append(post)
-            if column_index > 2:
-                column_index = 0
-            column_index += 1
         return {
             'items_by_columns': items_by_columns,
             'wrapper_widget': 'widget/multi-column.html',
@@ -51,37 +84,33 @@ class IndexView(generic.TemplateView):
 
 
 
-class PostView(generic.TemplateView):
+class OfferView(generic.TemplateView):
     template_name = 'v1/post.html'
 
     def get_context_data(self, **kwargs):
+        offer_id = kwargs['post_id']
         try:
-            self.post = Offer.objects.get(pk=kwargs['post_id'])
+            offer = Offer.objects.get(pk=offer_id)
         except Offer.DoesNotExist:
             raise Http404("Post not found")
-        is_editor = self.request.user.has_perm('blog.change_post')
         allowed_statuses = ['p']
-        if self.request.user.has_perm('blog.change_post', self.post) is False and self.post.status not in allowed_statuses:
-            raise Http404("Post not found")
-        post_content = self.post.content
+        if offer.status not in allowed_statuses:
+            #raise Http404("Post not found")
+            pass
         if self.request.is_ajax():
             return {
-                'layout': 'layout-post-ajax.html',
-                'item': self.post,
-                'post_content': post_content,
-                'posts': Offer.objects.filter(is_active__exact=True),
-                'is_editor': is_editor,
-                'sub_posts': Offer.objects.all()[0:6],
+                'layout': 'v1/layout-post-ajax.html',
+                'offer': get_offer_value_object_full(offer_id),
+                'post_content': '',
             }
         else:
             self.template_name = 'v1/index.html'
             items_by_columns = {1: [], 2: [], 3: []}
             return {
                 'items_by_columns': items_by_columns,
-                'item': self.post,
+                'offer': offer,
                 'wrapper_widget': 'widget/multi-column.html',
                 'item_widget': 'widget/post-mini.html',
-                'is_editor': is_editor,
             }
 
 

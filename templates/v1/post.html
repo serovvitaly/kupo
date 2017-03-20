@@ -1,36 +1,75 @@
 {% extends layout %}
 
-{% block title %}{{ item.title }}{% endblock %}
+{% block title %}{{ offer.title }}{% endblock %}
 
 {% block og_meta %}
-<meta property="og:title" content="{{ item.title }}" />
-<meta property="og:description" content="{{ item.annotation|striptags }}" />
+<meta property="og:title" content="{{ offer.title }}" />
+<meta property="og:description" content="{{ offer.annotation|striptags }}" />
 <meta property="og:type" content="article" />
-<meta property="og:image" content="{{ item.image }}" />
+<meta property="og:image" content="{{ offer.image }}" />
 {% endblock %}
 
 {% block center %}
-<h2 class="title">{{ item.title }}</h2>
-<hr>
-{% include 'widget/related-posts.html' %}
-{% if is_editor %}
-{% with True as is_fast_editor %}
-<div id="post-item-{{ item.id }}" class="{% if item.is_active %}toggle-0{% else %}toggle-1{% endif %}">
-{% include 'widget/editor-control.html' %}
+
+
+<div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+  <ol class="carousel-indicators">
+      {% for idx in images_range %}
+    <li data-target="#carousel-example-generic" data-slide-to="{{ idx }}"{% if forloop.first %} class="active"{% endif %}></li>
+      {% endfor %}
+  </ol>
+  <div class="carousel-inner" role="listbox">
+      {% for image_url in offer.images %}
+    <div class="item{% if forloop.first %} active{% endif %}">
+      <img src="{{ image_url }}" alt="...">
+      <div class="carousel-caption">
+        HELLO WORLD !!!
+      </div>
+    </div>
+      {% endfor %}
+  </div>
+  <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+    <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+    <span class="sr-only">Previous</span>
+  </a>
+  <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+    <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+    <span class="sr-only">Next</span>
+  </a>
 </div>
-{% endwith %}
-{% endif %}
-<div class="post-content">{{ post_content|safe }}</div>
+
+
+<h2 class="title">{{ offer.title }}</h2>
 <hr>
-{% include 'widget/social-net-line.html' %}
-<hr>
-{% if item.source_base_url %}
-<p>
-    <a href="{{ item.source_url }}" class="btn btn-sm btn-default" target="_blank">
-        <strong>Источник:</strong> {{ item.source_base_url }}
-    </a>
-</p>
-{% endif %}
-{% include 'widget/related-posts.html' %}
-{% include 'widget/interesting-posts.html' %}
+
+
+
+<div>
+  <ul class="nav nav-tabs" role="tablist">
+    <li role="presentation" class="active"><a href="#rules" aria-controls="home" role="tab" data-toggle="tab">Условия</a></li>
+    <li role="presentation"><a href="#description" aria-controls="profile" role="tab" data-toggle="tab">Описание</a></li>
+      <li role="presentation"><a href="#items" aria-controls="home" role="tab" data-toggle="tab"><strong>Предложения</strong></a></li>
+  </ul>
+  <div class="tab-content">
+    <div role="tabpanel" class="tab-pane active" id="rules">
+        <hr>
+        {{ offer.rules|safe }}
+    </div>
+    <div role="tabpanel" class="tab-pane" id="description">
+        <hr>
+        {{ offer.description|safe }}
+    </div>
+    <div role="tabpanel" class="tab-pane" id="items">
+        <hr>
+        <table class="table table-hover">
+            {% for offer_item in offer.items %}
+            <tr>
+            <td>{{ offer_item.title }}</td>
+            <td><a href="http://www.biglion.ru{{ offer_item.purchase_url }}" target="_blank" class="btn btn-danger">Купить</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+  </div>
+</div>
 {% endblock %}

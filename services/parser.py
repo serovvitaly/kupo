@@ -4,7 +4,7 @@ import importlib
 from spider.models import OfferUrl
 from progress.bar import Bar
 import urllib.request
-from offers.models import Offer, OfferItem
+from offers.models import Offer, OfferItem, OfferMedia
 
 from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
@@ -89,7 +89,7 @@ class Parser:
 
     def pull_offers(self):
         content_provider = self.get_content_provider('biglion')
-        offers_urls_list = OfferUrl.objects.all()[280:1000]
+        offers_urls_list = OfferUrl.objects.all()[0:281]
         bar = Bar('Processing', max=len(offers_urls_list))
         for offer_url in offers_urls_list:
             #print(offer_url.url)
@@ -108,6 +108,12 @@ class Parser:
             offer.coupon_expiration_date = offer_structure.coupon_expiration_date
             offer.coupon_beginning_usage_date = offer_structure.coupon_beginning_usage_date
             offer.save()
+
+            for image_url in offer_structure.images:
+                offer_media = OfferMedia()
+                offer_media.url = image_url
+                offer_media.offer = offer
+                offer_media.save()
 
             #print(type(offer_structure.items))
             for item_odj in offer_structure.items:
