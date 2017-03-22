@@ -187,21 +187,47 @@ class ContentDispatcher:
         ptrn = r'new ymaps\.Placemark\(\[([\d]+\.[\d]+),([\d]+\.[\d]+)\],\{[\s]*iconContent\:[\d]+,[\s]*balloonContentBody\:\'<div style="min-height:40px;">([^<]+)</div>\'[\s]*\}\)'
         values = re.findall(ptrn, self.content)
 
-        print(len(values))
-
         tree = etree.parse(StringIO(self.content), etree.HTMLParser())
         blocks_els_list = tree.xpath('//div[@id="address_list"]/div[@class="block"]')
 
+        places_list = []
         for block_el in blocks_els_list:
-            address_el = block_el.find('dt[@class="adress"]')
-            metro_el = block_el.find('dd[@class="metro"]')
-            phone_number_el = block_el.find('dd[@class="phone-number"]')
-            #modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
-            print(address_el, metro_el, phone_number_el)
+            place_obj = type('place_obj', (object,), {'address': None, 'metro': None, 'phone_number': None,})()
+            address_el = block_el.cssselect('dt.adress')
+            if len(address_el) > 0:
+                place_obj.address = address_el[0].text.strip()
+            metro_el = block_el.cssselect('dd.metro')
+            if len(metro_el) > 0:
+                place_obj.metro = metro_el[0].text.strip()
+            phone_number_el = block_el.cssselect('dd.phone-number')
+            if len(phone_number_el) > 0:
+                place_obj.phone_number = phone_number_el[0].text.strip()
+            places_list.append(place_obj)
 
-        #print(blocks_els_list)
+        return places_list
 
-        return []
+    def get_merchant(self):
+        merchant_obj = type('place_obj', (object,), {'places': [],})()
+        merchant_obj.places = self.get_places()
+
+        tree = etree.parse(StringIO(self.content), etree.HTMLParser())
+        block_el = tree.xpath('//div[@class="discont_contacts"]')[0]
+        header_el = block_el.cssselect('div.header')[0]
+        merchant_obj.name = header_el.text.strip()
+        site_url_el = block_el.cssselect('a.look-site')[0]
+        merchant_obj.site_url = site_url_el.get('href')
+
+
+        block2_el = tree.xpath('//div[@class="pre_phone_time"]')[0]
+        work_hours_el = block2_el.cssselect('div.work-hours')
+        if len(work_hours_el) > 0:
+            merchant_obj.work_hours = work_hours_el[0].text.strip()
+        phone_number_el = block2_el.cssselect('div.phone-number')
+        if len(phone_number_el) > 0:
+            merchant_obj.phone_number = phone_number_el[0].text.strip()
+
+
+        return merchant_obj
 
 
 class Offer(AbstractOffer):
@@ -287,7 +313,7 @@ class ContentProvider(AbstractProvider):
         offer_structure.items = content_dispatcher.get_items()
         offer_structure.images = content_dispatcher.get_images()
         offer_structure.tags = content_dispatcher.get_tags()
-        offer_structure.places = content_dispatcher.get_places()
+        offer_structure.merchant = content_dispatcher.get_merchant()
         return offer_structure
 
     def all(self):

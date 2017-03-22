@@ -1,10 +1,11 @@
 #from services.provider.biglion import Provider, Offer
+import json
 from urllib.parse import urlparse
 import importlib
 from spider.models import OfferUrl
 from progress.bar import Bar
 import urllib.request
-from offers.models import Offer, OfferItem, OfferMedia, OfferProperty, Place
+from offers.models import Offer, OfferItem, OfferMedia, OfferProperty, Place, Merchant
 
 from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
@@ -98,7 +99,13 @@ class Parser:
             offer_structure = content_provider.get_offer_structure(content)
             if offer_structure.title is None:
                 continue
+
+            merchant = Merchant()
+            merchant.name = offer_structure.merchant.name
+            merchant.save()
+
             offer = Offer()
+            offer.merchant = merchant
             offer.title = offer_structure.title
             offer.likes_count = offer_structure.likes_count
             offer.purchases_count = offer_structure.purchases_count
@@ -134,8 +141,23 @@ class Parser:
                 offer_property.value = tag
                 offer_property.save()
 
-            for place_obj in offer_structure.places:
+            print(offer_structure.merchant.__dict__)
+
+            for place_obj in offer_structure.merchant.places:
+                if place_obj.address is not None:
+                    pass
+                if place_obj.metro is not None:
+                    pass
+                if place_obj.phone_number is not None:
+                    pass
+                place_obj_dict = place_obj.__dict__
+                if len(place_obj_dict) < 1:
+                    continue
                 place = Place()
+                place.merchant = merchant
+                place.data = json.dumps(place_obj_dict)
+                place.save()
+
 
         #bar.finish()
 

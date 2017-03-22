@@ -21,6 +21,7 @@ class Offer(models.Model):
     coupon_expiration_date = models.DateTimeField()
     coupon_beginning_usage_date = models.DateTimeField()
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, null=True)
+    merchant = models.ForeignKey('Merchant')
 
 
 class OfferProperty(models.Model):
@@ -50,7 +51,15 @@ class OfferMedia(models.Model):
     offer = models.ForeignKey('Offer')
 
 
+class Merchant(models.Model):
+    class Meta:
+        db_table = 'merchants'
+    name = models.CharField(max_length=300)
+    #site_url = models.CharField(max_length=300)
+
+
 class Place(models.Model):
     class Meta:
         db_table = 'places'
+    merchant = models.ForeignKey('Merchant')
     data = models.TextField()
