@@ -175,6 +175,33 @@ class ContentDispatcher:
         ts = time.time()
         return datetime.fromtimestamp(ts+int(value), tz=timezone.utc)
 
+    def get_tags(self):
+        ptrn = r'<a class="do_tags_item_link" href="([^"]+)">([^<]+)</a>'
+        values = self.get_values_by_re(ptrn)
+        if values is None:
+            return []
+        #print(values)
+        return []
+
+    def get_places(self):
+        ptrn = r'new ymaps\.Placemark\(\[([\d]+\.[\d]+),([\d]+\.[\d]+)\],\{[\s]*iconContent\:[\d]+,[\s]*balloonContentBody\:\'<div style="min-height:40px;">([^<]+)</div>\'[\s]*\}\)'
+        values = re.findall(ptrn, self.content)
+
+        print(len(values))
+
+        tree = etree.parse(StringIO(self.content), etree.HTMLParser())
+        blocks_els_list = tree.xpath('//div[@id="address_list"]/div[@class="block"]')
+
+        for block_el in blocks_els_list:
+            address_el = block_el.find('dt[@class="adress"]')
+            metro_el = block_el.find('dd[@class="metro"]')
+            phone_number_el = block_el.find('dd[@class="phone-number"]')
+            #modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
+            print(address_el, metro_el, phone_number_el)
+
+        #print(blocks_els_list)
+
+        return []
 
 
 class Offer(AbstractOffer):
@@ -259,6 +286,8 @@ class ContentProvider(AbstractProvider):
         offer_structure.description = content_dispatcher.get_description()
         offer_structure.items = content_dispatcher.get_items()
         offer_structure.images = content_dispatcher.get_images()
+        offer_structure.tags = content_dispatcher.get_tags()
+        offer_structure.places = content_dispatcher.get_places()
         return offer_structure
 
     def all(self):

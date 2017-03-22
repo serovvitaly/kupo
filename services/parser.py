@@ -4,7 +4,7 @@ import importlib
 from spider.models import OfferUrl
 from progress.bar import Bar
 import urllib.request
-from offers.models import Offer, OfferItem, OfferMedia
+from offers.models import Offer, OfferItem, OfferMedia, OfferProperty, Place
 
 from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
@@ -89,11 +89,11 @@ class Parser:
 
     def pull_offers(self):
         content_provider = self.get_content_provider('biglion')
-        offers_urls_list = OfferUrl.objects.all()[0:281]
-        bar = Bar('Processing', max=len(offers_urls_list))
+        offers_urls_list = OfferUrl.objects.all()[0:10]
+        #bar = Bar('Processing', max=len(offers_urls_list))
         for offer_url in offers_urls_list:
-            #print(offer_url.url)
-            bar.next()
+            print(offer_url.url)
+            #bar.next()
             content = self.get_content_by_url(offer_url.url, use_cache=True)
             offer_structure = content_provider.get_offer_structure(content)
             if offer_structure.title is None:
@@ -115,7 +115,6 @@ class Parser:
                 offer_media.offer = offer
                 offer_media.save()
 
-            #print(type(offer_structure.items))
             for item_odj in offer_structure.items:
                 if item_odj.title is None:
                     continue
@@ -127,7 +126,18 @@ class Parser:
                 offer_item.offer = offer
                 offer_item.save()
 
-        bar.finish()
+            for tag in offer_structure.tags:
+                offer_property = OfferProperty()
+                offer_property.offer = offer
+                offer_property.type = 'string'
+                offer_property.name = 'tag'
+                offer_property.value = tag
+                offer_property.save()
+
+            for place_obj in offer_structure.places:
+                place = Place()
+
+        #bar.finish()
 
             #print(offer.pk)
 

@@ -43,9 +43,14 @@ class OfferItem(models.Model):
     offer = models.ForeignKey('Offer')
 
 
-
 class OfferMedia(models.Model):
     class Meta:
         db_table = 'offers_media'
     url = models.CharField(max_length=300)
     offer = models.ForeignKey('Offer')
+
+
+class Place(models.Model):
+    class Meta:
+        db_table = 'places'
+    data = models.TextField()
