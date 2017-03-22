@@ -28,9 +28,6 @@
         /*font-family: 'Open Sans Condensed', sans-serif;*/
         font-weight: bold;
         color: #556270;
-        font-size: 20px;
-        line-height: 20px;
-        margin-bottom: 12px;
     }
     .title a{
         color: #556270;
@@ -235,28 +232,7 @@
     {% block content %}{% endblock %}
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" crossorigin="anonymous"></script>
     <script type="text/javascript" src="//vk.com/js/api/openapi.js?139"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
 </div>
-{% if is_editor %}
-<script>
-function setIsActive(isActive, postId, selector) {
-    $.ajax({
-        'url': '/post/'+postId+'/save',
-        'type': 'post',
-        'dataType': 'json',
-        'data': {
-            csrfmiddlewaretoken: '{{csrf_token}}',
-            is_active: 1 * isActive
-        },
-        'success': function(response){
-            if (response.is_active) {
-                $(selector).removeClass('toggle-1').addClass('toggle-0');
-            } else {
-                $(selector).removeClass('toggle-0').addClass('toggle-1');
-            }
-        }
-    })
-}
-</script>
-{% endif %}
 </body>
 </html>

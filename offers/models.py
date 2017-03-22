@@ -23,6 +23,14 @@ class Offer(models.Model):
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, null=True)
 
 
+class OfferProperty(models.Model):
+    class Meta:
+        db_table = 'offers_properties'
+    offer = models.ForeignKey('Offer')
+    type = models.CharField(max_length=10)
+    name = models.CharField(max_length=50)
+    value = models.CharField(max_length=300)
+
 
 class OfferItem(models.Model):
     class Meta:
