@@ -55,7 +55,9 @@ class Merchant(models.Model):
     class Meta:
         db_table = 'merchants'
     name = models.CharField(max_length=300)
-    #site_url = models.CharField(max_length=300)
+    site_url = models.CharField(max_length=300)
+    work_hours = models.CharField(max_length=300)
+    phone_number = models.CharField(max_length=300)
 
 
 class Place(models.Model):

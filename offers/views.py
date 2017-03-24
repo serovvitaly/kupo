@@ -57,7 +57,7 @@ class IndexView(generic.TemplateView):
         for offer in posts[items_from:items_to]:
             #post_content = post_template.render(Context({'item': post}))
             offers_ids.append(offer.id)
-        offers_ids = [3168,3169,3170,3171,3172,3173,3174,3175,3176,3177,3178,3179,]
+        #offers_ids = [3168,3169,3170,3171,3172,3173,3174,3175,3176,3177,3178,3179,]
 
         offers_val_objs = get_offers_value_objects_mini(offers_ids)
         items_content = []

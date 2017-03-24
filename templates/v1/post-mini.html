@@ -16,15 +16,21 @@
                 <img alt="{{ offer.title }}" src="{{ offer.images.0 }}" style="margin-bottom: 10px;">
                 {% endif %}
                 <div class="small panel-content">
-                    <h3 class="title">{{ offer.title }}</h3>
+                    <strong class="title">{{ offer.title }}</strong>
                 </div>
-                <a
-                    class="btn btn-primary btn-sm btn-block"
-                    href="{{ offer.url }}?from=index"
-                    onclick="return showModal('{{ offer.id }}');"
-                >
-                    <strong>Показать полностью</strong>
-                </a>
+                <div class="row">
+                    <div class="col-lg-2"></div>
+                    <div class="col-lg-8">
+                        <a
+                            class="btn btn-primary btn-sm btn-block"
+                            href="{{ offer.url }}?from=index"
+                            onclick="return showModal('{{ offer.id }}');"
+                        >
+                            <strong>Показать полностью</strong>
+                        </a>
+                    </div>
+                    <div class="col-lg-2"></div>
+                </div>
             </div>
             <div class="panel-footer">
                 ***

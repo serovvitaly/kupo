@@ -73,12 +73,16 @@ class Parser:
 
     def pull_urls(self):
         urls = []
+        print('Pull services...')
         urls += self.get_urls_all('services')
+        print('Pull hotels...')
         urls += self.get_urls_all('hotels')
+        print('Pull tours...')
         urls += self.get_urls_all('tours')
+        print('Pull goods...')
         urls += self.get_urls_all('services/goods')
 
-        bar = Bar('Processing', max=len(urls))
+        bar = Bar('Writing to database', max=len(urls))
         for url in urls:
             offer_url = OfferUrl()
             offer_url.url = url
@@ -90,11 +94,11 @@ class Parser:
 
     def pull_offers(self):
         content_provider = self.get_content_provider('biglion')
-        offers_urls_list = OfferUrl.objects.all()[0:10]
-        #bar = Bar('Processing', max=len(offers_urls_list))
+        offers_urls_list = OfferUrl.objects.all()
+        bar = Bar('Processing', max=len(offers_urls_list))
         for offer_url in offers_urls_list:
-            print(offer_url.url)
-            #bar.next()
+            #print(offer_url.url)
+            bar.next()
             content = self.get_content_by_url(offer_url.url, use_cache=True)
             offer_structure = content_provider.get_offer_structure(content)
             if offer_structure.title is None:
@@ -141,7 +145,7 @@ class Parser:
                 offer_property.value = tag
                 offer_property.save()
 
-            print(offer_structure.merchant.__dict__)
+            #print(offer_structure.merchant.__dict__)
 
             for place_obj in offer_structure.merchant.places:
                 if place_obj.address is not None:
@@ -159,7 +163,7 @@ class Parser:
                 place.save()
 
 
-        #bar.finish()
+        bar.finish()
 
             #print(offer.pk)
 

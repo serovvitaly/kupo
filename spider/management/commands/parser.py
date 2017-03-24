@@ -7,6 +7,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         parser = Parser()
+        #parser.pull_urls()
         parser.pull_offers()
         return
 

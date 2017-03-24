@@ -207,15 +207,25 @@ class ContentDispatcher:
         return places_list
 
     def get_merchant(self):
-        merchant_obj = type('place_obj', (object,), {'places': [],})()
+        merchant_obj = type('place_obj', (object,), {
+            'places': [],
+            'name': None,
+            'site_url': None,
+            'work_hours': None,
+            'phone_number': None,
+        })()
         merchant_obj.places = self.get_places()
 
         tree = etree.parse(StringIO(self.content), etree.HTMLParser())
         block_el = tree.xpath('//div[@class="discont_contacts"]')[0]
         header_el = block_el.cssselect('div.header')[0]
         merchant_obj.name = header_el.text.strip()
-        site_url_el = block_el.cssselect('a.look-site')[0]
-        merchant_obj.site_url = site_url_el.get('href')
+        site_url_el = block_el.cssselect('a.look-site')
+        if len(site_url_el) > 1:
+            try:
+                merchant_obj.site_url = site_url_el[0].get('href')
+            except IndexError:
+                print(site_url_el)
 
 
         block2_el = tree.xpath('//div[@class="pre_phone_time"]')[0]
