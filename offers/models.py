@@ -5,23 +5,25 @@ STATUS_CHOICES = (
     ('d', 'Черновик'),
     ('p', 'Опубликовано'),
     ('w', 'Скрыто'),
+    ('o', 'В обработке'),
 )
-
 
 
 class Offer(models.Model):
     class Meta:
         db_table = 'offers'
-    title = models.CharField(max_length=300)
-    #likes_count = models.IntegerField()
-    #purchases_count = models.IntegerField()
-    rules = models.TextField()
-    description = models.TextField()
+    url = models.CharField(max_length=500, unique=True)
+    title = models.CharField(max_length=300, blank=True, null=True)
+    likes_count = models.IntegerField(blank=True, null=True)
+    purchases_count = models.IntegerField(blank=True, null=True)
+    rules = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    created_date = models.DateTimeField(blank=True, null=True)
     expiration_date = models.DateTimeField(blank=True, null=True)
-    coupon_expiration_date = models.DateTimeField()
-    coupon_beginning_usage_date = models.DateTimeField()
-    status = models.CharField(max_length=1, choices=STATUS_CHOICES, null=True)
-    merchant = models.ForeignKey('Merchant')
+    coupon_expiration_date = models.DateTimeField(blank=True, null=True)
+    coupon_beginning_usage_date = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=1, choices=STATUS_CHOICES, null=True, default='o')
+    merchant = models.ForeignKey('Merchant', null=True, blank=True)
 
 
 class OfferProperty(models.Model):
@@ -36,7 +38,7 @@ class OfferProperty(models.Model):
 class OfferItem(models.Model):
     class Meta:
         db_table = 'offers_items'
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=500)
     #purchases_count = models.IntegerField()
     purchase_url = models.CharField(max_length=300, blank=True, null=True)
     discount_value = models.FloatField()

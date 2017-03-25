@@ -28,4 +28,3 @@ class ContentProvider(models.Model):
         db_table = 'content_provider'
     title = models.CharField(max_length=300)
     description = models.CharField(max_length=800)
-
