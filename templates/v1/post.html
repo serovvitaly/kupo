@@ -10,85 +10,79 @@
 {% endblock %}
 
 {% block center %}
-
-    <h3 class="title">{{ offer.title }}</h3>
-
-    <div class="row">
-        <div class="col-lg-9">
-            <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
-              <ol class="carousel-indicators">
-                  {% for idx in images_range %}
-                <li data-target="#carousel-example-generic" data-slide-to="{{ idx }}"{% if forloop.first %} class="active"{% endif %}></li>
-                  {% endfor %}
-              </ol>
-              <div class="carousel-inner" role="listbox">
-                  {% for image_url in offer.images %}
-                <div class="item{% if forloop.first %} active{% endif %}">
-                  <img src="{{ image_url }}" alt="...">
-                  <div class="carousel-caption">
-                    HELLO WORLD !!!
-                  </div>
-                </div>
-                  {% endfor %}
-              </div>
-              <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
-                <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-              </a>
-              <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
-                <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-              </a>
+<div class="modal-body"><h1>{{ offer.title }}</h1></div>
+<div class="row">
+    <div class="col-lg-9">
+        <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+          <ol class="carousel-indicators">
+              {% for idx in images_range %}
+            <li data-target="#carousel-example-generic" data-slide-to="{{ idx }}"{% if forloop.first %} class="active"{% endif %}></li>
+              {% endfor %}
+          </ol>
+          <div class="carousel-inner" role="listbox">
+              {% for image_url in offer.images %}
+            <div class="item{% if forloop.first %} active{% endif %}">
+              <img src="{{ image_url }}" alt="">
             </div>
-        </div>
-        <div class="col-lg-3">
-
-            <button type="button" class="btn btn-primary">Купить</button>
-
+              {% endfor %}
+          </div>
+          <a class="left carousel-control" href="#carousel-example-generic" role="button" data-slide="prev">
+            <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="right carousel-control" href="#carousel-example-generic" role="button" data-slide="next">
+            <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
         </div>
     </div>
+    <div class="col-lg-3">
+        <a href="#offer-items" class="btn btn-primary">Купить</a>
+        <a href="{{ offer.url }}" class="btn btn-info" target="_blank">Источник</a>
+        <div>
+            {{ offer.merchant.name }}
+            <br>
+            {{ offer.merchant.site_url }}
 
-    <hr>
-<div>{{ offer.description|safe }}</div>
-
-
-
+        </div>
+        <div>
+            Действие акции: <br>с: {{ offer.created_date }} <br>по: {{ offer.expiration_date }}
+        </div>
+        <div>
+            Действие купона: <br>с: {{ offer.coupon_beginning_usage_date }} <br>по: {{ offer.coupon_expiration_date }}
+        </div>
+    </div>
+</div>
 <hr>
-
-
-
+<div class="modal-body">
+    <table class="table table-hover">
+        {% for offer_item in offer.items %}
+        <tr>
+        <td><strong>{{ offer_item.title }}</strong></td>
+        <td>
+            <a href="http://www.biglion.ru{{ offer_item.purchase_url }}" target="_blank" class="btn btn-success">
+                Купить: <strong>{{ offer_item.price_value }}--{{ offer_item.discount_value }}</strong>
+            </a>
+        </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
 <div>
-  <ul class="nav nav-tabs" role="tablist">
-    <li role="presentation" class="active"><a href="#rules" aria-controls="home" role="tab" data-toggle="tab">Условия</a></li>
-    <li role="presentation"><a href="#description" aria-controls="profile" role="tab" data-toggle="tab">Описание</a></li>
-      <li role="presentation"><a href="#items" aria-controls="home" role="tab" data-toggle="tab"><strong>Предложения</strong></a></li>
-      <li role="presentation"><a href="#tab-map" aria-controls="home" role="tab" data-toggle="tab">Карта</a></li>
+  <ul class="nav nav-tabs" role="tablist" style="padding-left: 12px;">
+      <li role="presentation" class="active"><a href="#description" aria-controls="profile" role="tab" data-toggle="tab">Описание</a></li>
+    <li role="presentation"><a href="#rules" aria-controls="home" role="tab" data-toggle="tab">Условия</a></li>
   </ul>
   <div class="tab-content">
-    <div role="tabpanel" class="tab-pane active" id="rules">
-        <hr>
-        {{ offer.rules|safe }}
+    <div role="tabpanel" class="tab-pane" id="rules">
+        <div class="modal-body">
+            {{ offer.rules|safe }}
+        </div>
     </div>
-    <div role="tabpanel" class="tab-pane" id="description">
-        <hr>
-        {{ offer.description|safe }}
-    </div>
-    <div role="tabpanel" class="tab-pane" id="items">
-        <hr>
-        <table class="table table-hover">
-            {% for offer_item in offer.items %}
-            <tr>
-            <td><strong>{{ offer_item.title }}</strong></td>
-            <td>
-                <a href="http://www.biglion.ru{{ offer_item.purchase_url }}" target="_blank" class="btn btn-danger">
-                    Купить: <strong>{{ offer_item.price_value }}--{{ offer_item.discount_value }}</strong>
-                </a>
-            </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-    <div role="tabpanel" class="tab-pane" id="tab-map">
+    <div role="tabpanel" class="tab-pane active" id="description">
+        <div class="modal-body">{{ offer.description|safe }}</div>
+        <div id="offer-items"></div>
+        <div>
         <div id="map" style="width: 100%; height: 400px"></div>
         <script type="text/javascript">
             var map = new ymaps.Map("map", {
@@ -96,6 +90,18 @@
                 zoom: 10
             });
         </script>
+        </div>
+        <div class="modal-body">
+            {% for offer_place in offer.places %}
+              <p class="small"><strong>{{ offer_place.address }} - ({{ offer_place.metro }})</strong>
+                  {% if offer_place.phone_number %}
+                  <br>
+                  <img style="width: 16px;" src="data:image/svg+xml;utf8;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iaXNvLTg4NTktMSI/Pgo8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMTkuMS4wLCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogNi4wMCBCdWlsZCAwKSAgLS0+CjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgdmVyc2lvbj0iMS4xIiBpZD0iQ2FwYV8xIiB4PSIwcHgiIHk9IjBweCIgdmlld0JveD0iMCAwIDQ3My44MDYgNDczLjgwNiIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNDczLjgwNiA0NzMuODA2OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIgd2lkdGg9IjUxMnB4IiBoZWlnaHQ9IjUxMnB4Ij4KPGc+Cgk8Zz4KCQk8cGF0aCBkPSJNMzc0LjQ1NiwyOTMuNTA2Yy05LjctMTAuMS0yMS40LTE1LjUtMzMuOC0xNS41Yy0xMi4zLDAtMjQuMSw1LjMtMzQuMiwxNS40bC0zMS42LDMxLjVjLTIuNi0xLjQtNS4yLTIuNy03LjctNCAgICBjLTMuNi0xLjgtNy0zLjUtOS45LTUuM2MtMjkuNi0xOC44LTU2LjUtNDMuMy04Mi4zLTc1Yy0xMi41LTE1LjgtMjAuOS0yOS4xLTI3LTQyLjZjOC4yLTcuNSwxNS44LTE1LjMsMjMuMi0yMi44ICAgIGMyLjgtMi44LDUuNi01LjcsOC40LTguNWMyMS0yMSwyMS00OC4yLDAtNjkuMmwtMjcuMy0yNy4zYy0zLjEtMy4xLTYuMy02LjMtOS4zLTkuNWMtNi02LjItMTIuMy0xMi42LTE4LjgtMTguNiAgICBjLTkuNy05LjYtMjEuMy0xNC43LTMzLjUtMTQuN3MtMjQsNS4xLTM0LDE0LjdjLTAuMSwwLjEtMC4xLDAuMS0wLjIsMC4ybC0zNCwzNC4zYy0xMi44LDEyLjgtMjAuMSwyOC40LTIxLjcsNDYuNSAgICBjLTIuNCwyOS4yLDYuMiw1Ni40LDEyLjgsNzQuMmMxNi4yLDQzLjcsNDAuNCw4NC4yLDc2LjUsMTI3LjZjNDMuOCw1Mi4zLDk2LjUsOTMuNiwxNTYuNywxMjIuN2MyMywxMC45LDUzLjcsMjMuOCw4OCwyNiAgICBjMi4xLDAuMSw0LjMsMC4yLDYuMywwLjJjMjMuMSwwLDQyLjUtOC4zLDU3LjctMjQuOGMwLjEtMC4yLDAuMy0wLjMsMC40LTAuNWM1LjItNi4zLDExLjItMTIsMTcuNS0xOC4xYzQuMy00LjEsOC43LTguNCwxMy0xMi45ICAgIGM5LjktMTAuMywxNS4xLTIyLjMsMTUuMS0zNC42YzAtMTIuNC01LjMtMjQuMy0xNS40LTM0LjNMMzc0LjQ1NiwyOTMuNTA2eiBNNDEwLjI1NiwzOTguODA2ICAgIEM0MTAuMTU2LDM5OC44MDYsNDEwLjE1NiwzOTguOTA2LDQxMC4yNTYsMzk4LjgwNmMtMy45LDQuMi03LjksOC0xMi4yLDEyLjJjLTYuNSw2LjItMTMuMSwxMi43LTE5LjMsMjAgICAgYy0xMC4xLDEwLjgtMjIsMTUuOS0zNy42LDE1LjljLTEuNSwwLTMuMSwwLTQuNi0wLjFjLTI5LjctMS45LTU3LjMtMTMuNS03OC0yMy40Yy01Ni42LTI3LjQtMTA2LjMtNjYuMy0xNDcuNi0xMTUuNiAgICBjLTM0LjEtNDEuMS01Ni45LTc5LjEtNzItMTE5LjljLTkuMy0yNC45LTEyLjctNDQuMy0xMS4yLTYyLjZjMS0xMS43LDUuNS0yMS40LDEzLjgtMjkuN2wzNC4xLTM0LjFjNC45LTQuNiwxMC4xLTcuMSwxNS4yLTcuMSAgICBjNi4zLDAsMTEuNCwzLjgsMTQuNiw3YzAuMSwwLjEsMC4yLDAuMiwwLjMsMC4zYzYuMSw1LjcsMTEuOSwxMS42LDE4LDE3LjljMy4xLDMuMiw2LjMsNi40LDkuNSw5LjdsMjcuMywyNy4zICAgIGMxMC42LDEwLjYsMTAuNiwyMC40LDAsMzFjLTIuOSwyLjktNS43LDUuOC04LjYsOC42Yy04LjQsOC42LTE2LjQsMTYuNi0yNS4xLDI0LjRjLTAuMiwwLjItMC40LDAuMy0wLjUsMC41ICAgIGMtOC42LDguNi03LDE3LTUuMiwyMi43YzAuMSwwLjMsMC4yLDAuNiwwLjMsMC45YzcuMSwxNy4yLDE3LjEsMzMuNCwzMi4zLDUyLjdsMC4xLDAuMWMyNy42LDM0LDU2LjcsNjAuNSw4OC44LDgwLjggICAgYzQuMSwyLjYsOC4zLDQuNywxMi4zLDYuN2MzLjYsMS44LDcsMy41LDkuOSw1LjNjMC40LDAuMiwwLjgsMC41LDEuMiwwLjdjMy40LDEuNyw2LjYsMi41LDkuOSwyLjVjOC4zLDAsMTMuNS01LjIsMTUuMi02LjkgICAgbDM0LjItMzQuMmMzLjQtMy40LDguOC03LjUsMTUuMS03LjVjNi4yLDAsMTEuMywzLjksMTQuNCw3LjNjMC4xLDAuMSwwLjEsMC4xLDAuMiwwLjJsNTUuMSw1NS4xICAgIEM0MjAuNDU2LDM3Ny43MDYsNDIwLjQ1NiwzODguMjA2LDQxMC4yNTYsMzk4LjgwNnoiIGZpbGw9IiMwMDAwMDAiLz4KCQk8cGF0aCBkPSJNMjU2LjA1NiwxMTIuNzA2YzI2LjIsNC40LDUwLDE2LjgsNjksMzUuOHMzMS4zLDQyLjgsMzUuOCw2OWMxLjEsNi42LDYuOCwxMS4yLDEzLjMsMTEuMmMwLjgsMCwxLjUtMC4xLDIuMy0wLjIgICAgYzcuNC0xLjIsMTIuMy04LjIsMTEuMS0xNS42Yy01LjQtMzEuNy0yMC40LTYwLjYtNDMuMy04My41cy01MS44LTM3LjktODMuNS00My4zYy03LjQtMS4yLTE0LjMsMy43LTE1LjYsMTEgICAgUzI0OC42NTYsMTExLjUwNiwyNTYuMDU2LDExMi43MDZ6IiBmaWxsPSIjMDAwMDAwIi8+CgkJPHBhdGggZD0iTTQ3My4yNTYsMjA5LjAwNmMtOC45LTUyLjItMzMuNS05OS43LTcxLjMtMTM3LjVzLTg1LjMtNjIuNC0xMzcuNS03MS4zYy03LjMtMS4zLTE0LjIsMy43LTE1LjUsMTEgICAgYy0xLjIsNy40LDMuNywxNC4zLDExLjEsMTUuNmM0Ni42LDcuOSw4OS4xLDMwLDEyMi45LDYzLjdjMzMuOCwzMy44LDU1LjgsNzYuMyw2My43LDEyMi45YzEuMSw2LjYsNi44LDExLjIsMTMuMywxMS4yICAgIGMwLjgsMCwxLjUtMC4xLDIuMy0wLjJDNDY5LjU1NiwyMjMuMzA2LDQ3NC41NTYsMjE2LjMwNiw0NzMuMjU2LDIwOS4wMDZ6IiBmaWxsPSIjMDAwMDAwIi8+Cgk8L2c+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPGc+CjwvZz4KPC9zdmc+Cg==" />
+                  {{ offer_place.phone_number }}
+                  {% endif %}
+              </p>
+            {% endfor %}
+        </div>
     </div>
   </div>
 

@@ -3,6 +3,7 @@ from django.views import generic
 from offers.models import *
 from django.http import Http404, HttpResponseForbidden, HttpResponse, JsonResponse
 from django.template import loader, Context
+import json
 
 
 
@@ -30,13 +31,24 @@ def get_offer_value_object_full(offer_id):
         offer = Offer.objects.get(pk=offer_id)
     except Offer.DoesNotExist:
         return None
-    offer_dict = type('offer_dict', (object,), {**offer.__dict__, **{'images':[], 'items': []}})
+    offer_dict = type('offer_dict', (object,), {**offer.__dict__, **{
+        'images':[],
+        'items': [],
+        'places': [],
+        'merchant': [],
+    }})
     offers_media = OfferMedia.objects.filter(offer_id__exact=offer_id).all()
     offers_items = OfferItem.objects.filter(offer_id__exact=offer_id).all()
+    merchant_places = Place.objects.filter(merchant_id__exact=offer.merchant_id).all()
+    merchant = Merchant.objects.get(pk=offer.merchant_id)
+    offer_dict.merchant = merchant.__dict__
     for offer_media in offers_media:
         offer_dict.images.append(offer_media.url)
     for offer_item in offers_items:
         offer_dict.items.append(offer_item.__dict__)
+    for offer_place in merchant_places:
+        offer_place = json.loads(offer_place.data)
+        offer_dict.places.append(offer_place)
     return offer_dict
 
 

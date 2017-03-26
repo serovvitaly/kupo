@@ -6,11 +6,9 @@
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <span style="color: white">*</span>
       </div>
-      <div class="modal-body" id="modalPostContent">
-        ...
+      <div id="modalPostContent">
       </div>
       <div class="modal-footer">
-
       </div>
     </div>
   </div>
@@ -28,6 +26,7 @@
     $(function () {
         $('#postModal').on('hide.bs.modal', function (e) {
             history.pushState({'page_id': 0}, '', '/');
+            $('#modalPostContent').html('');
         });
         {% if item %}
         showModal({{ item.id }});
