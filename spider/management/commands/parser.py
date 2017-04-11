@@ -6,7 +6,7 @@ from services.parser import Parser
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        parser = Parser()
+        parser = Parser('kupibonus')
         #parser.pull_urls()
         parser.pull_offers()
         return

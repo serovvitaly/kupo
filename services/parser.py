@@ -14,7 +14,8 @@ mem_client = MemClient(('localhost', 11211))
 
 class Parser:
 
-    def __init__(self):
+    def __init__(self, provide_name):
+        self.provide_name = provide_name
         self.content_providers_list = {}
 
 
@@ -51,7 +52,7 @@ class Parser:
 
     def get_urls_all(self, section):
         base_url = 'http://www.biglion.ru/'+section+'/'
-        content_provider = self.get_content_provider('biglion')
+        content_provider = self.get_content_provider(self.provide_name)
         first_page_content = self.get_content_by_url(base_url, use_cache=True)
         first_page_structure = content_provider.get_list_page_structure(first_page_content)
         if first_page_structure.total_pages is None:
@@ -96,7 +97,7 @@ class Parser:
 
 
     def pull_offer_by_url(self, url):
-        content_provider = self.get_content_provider('biglion')
+        content_provider = self.get_content_provider(self.provide_name)
         content = self.get_content_by_url(url, use_cache=True)
         offer_structure = content_provider.get_offer_structure(content)
         if offer_structure.title is None:
@@ -183,7 +184,7 @@ class Parser:
 
 
     def execute(self):
-        content_provider = self.get_content_provider('biglion')
+        content_provider = self.get_content_provider(self.provide_name)
         offers_urls_list = OfferUrl.objects.all()
         offset = 1
         for offer_url in offers_urls_list[offset:offset+1]:
@@ -195,7 +196,7 @@ class Parser:
 
         return
 
-        content_provider = self.get_content_provider('biglion')
+        content_provider = self.get_content_provider(self.provide_name)
         """
         Получаем список URL для загрузки контента
         """
