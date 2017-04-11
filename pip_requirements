@@ -1,0 +1,3 @@
+# pip3 install -r pip_requirements
+pymemcache
+lxml
