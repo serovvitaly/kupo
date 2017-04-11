@@ -3,10 +3,11 @@ import json
 from urllib.parse import urlparse
 import importlib
 from spider.models import OfferUrl
-from progress.bar import Bar
+#from progress.bar import Bar
 import urllib.request
 from offers.models import Offer, OfferItem, OfferMedia, OfferProperty, Place, Merchant
 from datetime import datetime, timezone
+from services.offer import OfferEntity
 
 from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
@@ -84,7 +85,7 @@ class Parser:
         print('Pull goods...')
         urls += self.get_urls_all('services/goods')
 
-        bar = Bar('Writing to database', max=len(urls))
+        #bar = Bar('Writing to database', max=len(urls))
         for url in urls:
             offer = Offer.objects.filter(url__exact=url).first()
             if offer is None:
@@ -92,9 +93,24 @@ class Parser:
                 offer.url = url
                 offer.created_date = datetime.now(tz=timezone.utc)
             offer.save()
-            bar.next()
-        bar.finish()
+            #bar.next()
+        #bar.finish()
 
+    def get_offer_entity_by_url(self, url):
+        content_provider = self.get_content_provider(self.provide_name)
+        content = self.get_content_by_url(url, use_cache=True)
+        offer_structure = content_provider.get_offer_structure(content)
+        if offer_structure.title is None:
+            return False
+        offer_entity = OfferEntity(
+            title=offer_structure.title,
+            rules=offer_structure.rules,
+            description=offer_structure.description,
+            items=offer_structure.items,
+            tags=offer_structure.tags,
+            places=offer_structure.places,
+        )
+        return offer_entity
 
     def pull_offer_by_url(self, url):
         content_provider = self.get_content_provider(self.provide_name)
@@ -102,6 +118,8 @@ class Parser:
         offer_structure = content_provider.get_offer_structure(content)
         if offer_structure.title is None:
             return False
+
+
 
         merchant = Merchant()
         merchant.name = offer_structure.merchant.name
@@ -176,11 +194,11 @@ class Parser:
 
     def pull_offers(self):
         offers = Offer.objects.filter(status__exact='o').all()
-        bar = Bar('Processing', max=len(offers))
+        #bar = Bar('Processing', max=len(offers))
         for offer in offers:
-            bar.next()
+            #bar.next()
             self.pull_offer_by_url(offer.url)
-        bar.finish()
+        #bar.finish()
 
 
     def execute(self):
@@ -206,9 +224,9 @@ class Parser:
         """
         Обходим этот список, и получаем данные для каждой страницы
         """
-        bar = Bar('Processing', max=len(urls_list))
+        #bar = Bar('Processing', max=len(urls_list))
         for url in urls_list:
-            bar.next()
+            #bar.next()
             up = urlparse(url)
             if up.netloc != 'www.biglion.ru':
                 continue
@@ -223,4 +241,4 @@ class Parser:
             #self.fill_offer_by_url(offer, url)
             #print(offer.url)
             #print(offer.title)
-        bar.finish()
+        #bar.finish()

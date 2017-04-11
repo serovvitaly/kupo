@@ -38,7 +38,7 @@ class ContentDispatcher:
         return ms.groups()
 
     def get_title(self):
-        ptrn = r'<h1 class="header" id="headerTitle">([\s\S]+?)</h1>'
+        ptrn = r'<h1 itemprop="name">([\s\S]+?)</h1>'
         return self.get_value_by_re(ptrn)
 
     def get_likes_count(self):
@@ -58,7 +58,7 @@ class ContentDispatcher:
     def get_rules(self):
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(self.content), parser)
-        r = tree.xpath('//div[@class="multi_text_block multi_text_block1"]/div[@class="terms-load one_multi_text"]')
+        r = tree.xpath('//div[@class="desc"]')
         if len(r) < 1:
             return None
         base_el = r[0]
@@ -72,6 +72,20 @@ class ContentDispatcher:
             rms.getparent().remove(rms)
         for rms in base_el.xpath('//table[@style="border: none;width: 100%;"]'):
             rms.getparent().remove(rms)
+        content_list = []
+        for child_el in base_el.getchildren():
+            child_ctn = etree.tostring(child_el, pretty_print=True, method="html").decode('utf8')
+            content_list.append(child_ctn)
+        content = (''.join(content_list)).strip()
+        return content
+
+    def get_description(self):
+        parser = etree.HTMLParser()
+        tree = etree.parse(StringIO(self.content), parser)
+        r = tree.xpath('//div[@class="desc"]')
+        if len(r) < 1:
+            return None
+        base_el = r[0]
         content_list = []
         for child_el in base_el.getchildren():
             child_ctn = etree.tostring(child_el, pretty_print=True, method="html").decode('utf8')
@@ -102,20 +116,6 @@ class ContentDispatcher:
             year=int(values[2]),
             tzinfo=timezone.utc
         )
-
-    def get_description(self):
-        parser = etree.HTMLParser()
-        tree = etree.parse(StringIO(self.content), parser)
-        r = tree.xpath('//div[@class="description-load one_multi_text"]')
-        if len(r) < 1:
-            return None
-        base_el = r[0]
-        content_list = []
-        for child_el in base_el.getchildren():
-            child_ctn = etree.tostring(child_el, pretty_print=True, method="html").decode('utf8')
-            content_list.append(child_ctn)
-        content = (''.join(content_list)).strip()
-        return content
 
     def get_items(self):
         parser = etree.HTMLParser()
@@ -187,7 +187,7 @@ class ContentDispatcher:
         ptrn = r'new ymaps\.Placemark\(\[([\d]+\.[\d]+),([\d]+\.[\d]+)\],\{[\s]*iconContent\:[\d]+,[\s]*balloonContentBody\:\'<div style="min-height:40px;">([^<]+)</div>\'[\s]*\}\)'
         values = re.findall(ptrn, self.content)
 
-        print(len(values))
+        #print(len(values))
 
         tree = etree.parse(StringIO(self.content), etree.HTMLParser())
         blocks_els_list = tree.xpath('//div[@id="address_list"]/div[@class="block"]')
@@ -197,7 +197,7 @@ class ContentDispatcher:
             metro_el = block_el.find('dd[@class="metro"]')
             phone_number_el = block_el.find('dd[@class="phone-number"]')
             #modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
-            print(address_el, metro_el, phone_number_el)
+            #print(address_el, metro_el, phone_number_el)
 
         #print(blocks_els_list)
 
