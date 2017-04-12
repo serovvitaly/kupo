@@ -105,8 +105,13 @@ class Parser:
 
         items = []
         for item in offer_structure.items:
+            print('URL:', type(item.url), item.url)
             items.append(OfferItemEntity(
-                title=item.title
+                url=item.url,
+                title=item.title,
+                amount=item.amount,
+                price=item.price,
+                discount=item.discount
             ))
 
         tags = []

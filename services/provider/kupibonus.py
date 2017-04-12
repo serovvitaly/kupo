@@ -45,11 +45,30 @@ class OfferItemContentDispatcher:
 
     def __init__(self, content):
         self.content = content
-        self.title = self.get_title()
+        self.url = 'top',
+        self.title = self.get_title(),
+        self.amount = self.get_amount(),
+        self.price = self.get_price(),
+        self.discount = self.get_discount()
+        print('SELF', type(self.url), self.url)
+        self.foo = 'bar'
+        print('SELF', type(self.foo), self.foo)
+
+    def get_url(self):
+        return 'foo'
 
     def get_title(self):
         ptrn = r'<h1 itemprop="name">([\s\S]+?)</h1>'
-        return self.get_value_by_re(ptrn)
+        return str(self.get_value_by_re(ptrn))
+
+    def get_amount(self):
+        pass
+
+    def get_price(self):
+        pass
+
+    def get_discount(self):
+        pass
 
 
 class OfferContentDispatcher:
@@ -170,7 +189,9 @@ class OfferContentDispatcher:
             return []
         items_list = []
         for item_content in items:
-            items_list.append(OfferItemContentDispatcher(content=item_content.__str__()))
+            item = OfferItemContentDispatcher(content=item_content.__str__())
+            print('ITEM', item.__dict__['url'])
+            items_list.append(item)
         return items_list
 
     def get_images(self):
