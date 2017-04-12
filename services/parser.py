@@ -7,7 +7,7 @@ from spider.models import OfferUrl
 import urllib.request
 from offers.models import Offer, OfferItem, OfferMedia, OfferProperty, Place, Merchant
 from datetime import datetime, timezone
-from services.offer import OfferEntity
+from services.offer import OfferEntity, PlaceEntity, OfferItemEntity, TagEntity
 
 from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
@@ -102,13 +102,32 @@ class Parser:
         offer_structure = content_provider.get_offer_structure(content)
         if offer_structure.title is None:
             return False
+
+        items = []
+        for item in offer_structure.items:
+            items.append(OfferItemEntity(
+                title=item.title
+            ))
+
+        tags = []
+        for tag in offer_structure.tags:
+            tags.append(TagEntity(
+                title=tag.title
+            ))
+
+        places = []
+        for place in offer_structure.places:
+            places.append(PlaceEntity(
+                title=place.title
+            ))
+
         offer_entity = OfferEntity(
             title=offer_structure.title,
             rules=offer_structure.rules,
             description=offer_structure.description,
-            items=offer_structure.items,
-            tags=offer_structure.tags,
-            places=offer_structure.places,
+            items=items,
+            tags=tags,
+            places=places,
         )
         return offer_entity
 
