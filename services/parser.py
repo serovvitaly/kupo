@@ -19,7 +19,8 @@ class Parser:
         self.provide_name = provide_name
         self.content_providers_list = {}
 
-    def get_content_by_url(self, url, use_cache=False):
+    @staticmethod
+    def get_content_by_url(url, use_cache=False):
         if use_cache is True:
             cache = mem_client.get(url)
             if cache is not None:
