@@ -5,13 +5,14 @@ new_contract('TagEntityContract', 'isinstance(TagEntity)')
 new_contract('PlaceEntityContract', 'isinstance(PlaceEntity)')
 new_contract('CurrencyEntityContract', 'isinstance(CurrencyEntity)')
 new_contract('MoneyEntityContract', 'isinstance(MoneyEntity)')
+new_contract('CurrencyCodeContract', lambda s: isinstance(s, str) and len(s) == 3)
 
 
 class CurrencyEntity:
     @contract
     def __init__(self, code):
         """
-        :type code: str,=3
+        :type code: CurrencyCodeContract
         """
         self.code = code.upper()
 

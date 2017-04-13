@@ -1,24 +1,23 @@
-#from services.provider.biglion import Provider, Offer
+# from services.provider.biglion import Provider, Offer
 import json
 from urllib.parse import urlparse
 import importlib
 from spider.models import OfferUrl
-#from progress.bar import Bar
+# from progress.bar import Bar
 import urllib.request
 from offers.models import Offer, OfferItem, OfferMedia, OfferProperty, Place, Merchant
 from datetime import datetime, timezone
-from services.offer import OfferEntity, PlaceEntity, OfferItemEntity, TagEntity
+from services.offer import *
 
 from pymemcache.client.base import Client as MemClient
+
 mem_client = MemClient(('localhost', 11211))
 
 
 class Parser:
-
     def __init__(self, provide_name):
         self.provide_name = provide_name
         self.content_providers_list = {}
-
 
     def get_content_by_url(self, url, use_cache=False):
         if use_cache is True:
@@ -31,28 +30,25 @@ class Parser:
             mem_client.set(url, content, 60 * 60)
             return content.decode('utf8')
 
-
     def get_content_provider(self, name, key=None):
         if key is None:
             key = name
         if key not in self.content_providers_list:
-            mod = importlib.import_module('services.provider.'+name)
+            mod = importlib.import_module('services.provider.' + name)
             if hasattr(mod, 'ContentProvider') is False:
                 return False
             content_provider = getattr(mod, 'ContentProvider')()
             self.content_providers_list[key] = content_provider
         return self.content_providers_list[key]
 
-
     def fill_offer_by_url(self, offer, url):
-        #content_provider = Provider()
-        #content = content_provider.get_content_by_url(url)
-        #content_provider.fill_offer_from_content(offer, content)
+        # content_provider = Provider()
+        # content = content_provider.get_content_by_url(url)
+        # content_provider.fill_offer_from_content(offer, content)
         pass
 
-
     def get_urls_all(self, section):
-        base_url = 'http://www.biglion.ru/'+section+'/'
+        base_url = 'http://www.biglion.ru/' + section + '/'
         content_provider = self.get_content_provider(self.provide_name)
         first_page_content = self.get_content_by_url(base_url, use_cache=True)
         first_page_structure = content_provider.get_list_page_structure(first_page_content)
@@ -61,7 +57,7 @@ class Parser:
         urls = first_page_structure.urls_list
         for page in range(2, first_page_structure.total_pages + 1):
             page_url = base_url + '?page=' + str(page)
-            #print(page_url)
+            # print(page_url)
             page_content = self.get_content_by_url(page_url, use_cache=True)
             page_structure = content_provider.get_list_page_structure(page_content)
             urls += page_structure.urls_list
@@ -71,8 +67,7 @@ class Parser:
             if url in result_urls:
                 continue
             result_urls.append(url)
-        return  result_urls
-
+        return result_urls
 
     def pull_urls(self):
         urls = []
@@ -85,7 +80,7 @@ class Parser:
         print('Pull goods...')
         urls += self.get_urls_all('services/goods')
 
-        #bar = Bar('Writing to database', max=len(urls))
+        # bar = Bar('Writing to database', max=len(urls))
         for url in urls:
             offer = Offer.objects.filter(url__exact=url).first()
             if offer is None:
@@ -93,8 +88,8 @@ class Parser:
                 offer.url = url
                 offer.created_date = datetime.now(tz=timezone.utc)
             offer.save()
-            #bar.next()
-        #bar.finish()
+            # bar.next()
+            # bar.finish()
 
     def get_offer_entity_by_url(self, url):
         content_provider = self.get_content_provider(self.provide_name)
@@ -105,12 +100,11 @@ class Parser:
 
         items = []
         for item in offer_structure.items:
-            print('URL:', type(item.url), item.url)
             items.append(OfferItemEntity(
                 url=item.url,
                 title=item.title,
-                amount=item.amount,
-                price=item.price,
+                amount=MoneyEntity(item.amount, CurrencyEntity('RUB')),
+                price=MoneyEntity(item.price, CurrencyEntity('RUB')),
                 discount=item.discount
             ))
 
@@ -142,8 +136,6 @@ class Parser:
         offer_structure = content_provider.get_offer_structure(content)
         if offer_structure.title is None:
             return False
-
-
 
         merchant = Merchant()
         merchant.name = offer_structure.merchant.name
@@ -207,34 +199,29 @@ class Parser:
             place.data = json.dumps(place_obj_dict)
             place.save()
 
-
     def pull_offer_by_id(self, offer_id):
         offer = Offer.objects.get(pk=offer_id)
         if offer is None:
             return False
         return self.pull_offer_by_url(offer.url)
 
-
-
     def pull_offers(self):
         offers = Offer.objects.filter(status__exact='o').all()
-        #bar = Bar('Processing', max=len(offers))
+        # bar = Bar('Processing', max=len(offers))
         for offer in offers:
-            #bar.next()
+            # bar.next()
             self.pull_offer_by_url(offer.url)
-        #bar.finish()
-
+            # bar.finish()
 
     def execute(self):
         content_provider = self.get_content_provider(self.provide_name)
         offers_urls_list = OfferUrl.objects.all()
         offset = 1
-        for offer_url in offers_urls_list[offset:offset+1]:
+        for offer_url in offers_urls_list[offset:offset + 1]:
             print(offer_url.url)
             content = self.get_content_by_url('http://www.biglion.ru/deals/seti-jakitorija-50/')
             offer_structure = content_provider.get_offer_structure(content)
             print(offer_structure.expiration_date)
-
 
         return
 
@@ -248,9 +235,9 @@ class Parser:
         """
         Обходим этот список, и получаем данные для каждой страницы
         """
-        #bar = Bar('Processing', max=len(urls_list))
+        # bar = Bar('Processing', max=len(urls_list))
         for url in urls_list:
-            #bar.next()
+            # bar.next()
             up = urlparse(url)
             if up.netloc != 'www.biglion.ru':
                 continue
@@ -260,9 +247,9 @@ class Parser:
             offer_url.url = url
             offer_url.offer_provider_id = 1
             offer_url.save()
-            #offer = Offer()
-            #offer.url = url
-            #self.fill_offer_by_url(offer, url)
-            #print(offer.url)
-            #print(offer.title)
-        #bar.finish()
+            # offer = Offer()
+            # offer.url = url
+            # self.fill_offer_by_url(offer, url)
+            # print(offer.url)
+            # print(offer.title)
+            # bar.finish()

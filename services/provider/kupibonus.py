@@ -23,14 +23,20 @@ class TagContentDispatcher:
 
     def __init__(self, content):
         self.content = content
-        self.title = ''
+
+    @property
+    def title(self):
+        return ''
 
 
 class PlaceContentDispatcher:
 
     def __init__(self, content):
         self.content = content
-        self.title = ''
+
+    @property
+    def title(self):
+        return ''
 
 
 class OfferItemContentDispatcher:
@@ -45,30 +51,27 @@ class OfferItemContentDispatcher:
 
     def __init__(self, content):
         self.content = content
-        self.url = 'top',
-        self.title = self.get_title(),
-        self.amount = self.get_amount(),
-        self.price = self.get_price(),
-        self.discount = self.get_discount()
-        print('SELF', type(self.url), self.url)
-        self.foo = 'bar'
-        print('SELF', type(self.foo), self.foo)
 
-    def get_url(self):
+    @property
+    def url(self):
         return 'foo'
 
-    def get_title(self):
+    @property
+    def title(self):
         ptrn = r'<h1 itemprop="name">([\s\S]+?)</h1>'
         return str(self.get_value_by_re(ptrn))
 
-    def get_amount(self):
-        pass
+    @property
+    def amount(self):
+        return 1.1
 
-    def get_price(self):
-        pass
+    @property
+    def price(self):
+        return 2.2
 
-    def get_discount(self):
-        pass
+    @property
+    def discount(self):
+        return 3.3
 
 
 class OfferContentDispatcher:
@@ -190,7 +193,6 @@ class OfferContentDispatcher:
         items_list = []
         for item_content in items:
             item = OfferItemContentDispatcher(content=item_content.__str__())
-            print('ITEM', item.__dict__['url'])
             items_list.append(item)
         return items_list
 
