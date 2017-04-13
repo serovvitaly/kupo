@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from services.offer import *
 from contracts import contract
 from services.parser import Parser
+from offers.models import *
 
 
 class OfferRepository(metaclass=ABCMeta):
@@ -17,6 +18,14 @@ class OfferRepository(metaclass=ABCMeta):
 class SqlOfferRepository(OfferRepository):
     @contract
     def add(self, offer_entity: OfferEntity):
+        offer = Offer(
+            url=offer_entity.url,
+            title=offer_entity.title,
+            rules=offer_entity.rules,
+            description=offer_entity.description
+        )
+        offer.save(force_insert=True)
+        print('OfferID:', offer.id)
         return self
 
     @contract

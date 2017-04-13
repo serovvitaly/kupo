@@ -51,15 +51,16 @@ class PlaceEntity:
 
 class OfferEntity:
     @contract
-    def __init__(self, title: str, rules: str, description: str, items, tags, places):
+    def __init__(self, url: str, title: str, rules: str, description: str, items, tags, places):
         """
         :type items: list[>0](OfferItemEntityContract)
         :type tags: list[>0](TagEntityContract)
         :type places: list[>0](PlaceEntityContract)
         """
-        self.title = title
-        self.rules = rules
-        self.description = description
+        self.url = url.strip()
+        self.title = title.strip()
+        self.rules = rules.strip()
+        self.description = description.strip()
         self.items = items
         self.tags = tags
         self.places = places

@@ -122,6 +122,7 @@ class Parser:
             ))
 
         offer_entity = OfferEntity(
+            url=url,
             title=offer_structure.title,
             rules=offer_structure.rules,
             description=offer_structure.description,

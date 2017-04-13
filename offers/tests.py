@@ -2,6 +2,7 @@ from django.test import TestCase
 from services.offer import OfferEntity
 from services.parser import Parser
 from services.repository import *
+from offers.models import *
 
 
 class OfferEntityTestCase(TestCase):
