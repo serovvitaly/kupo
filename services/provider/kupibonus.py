@@ -1,88 +1,20 @@
 """
 http://www.kupibonus.ru/
 """
-
 import re
-import pickle
 import time
 from datetime import datetime, timezone
-import urllib.request
-from xml.dom import minidom
-from urllib.parse import urlparse
-from models.base import AbstractOffer, AbstractProvider
 import lxml.etree as etree
 from io import StringIO
 from bs4 import BeautifulSoup
+from services.offer import *
+from contracts import contract
+import json
 
-from pymemcache.client.base import Client as MemClient
 
-mem_client = MemClient(('localhost', 11211))
-
-
-class TagContentDispatcher:
-
+class ContentDispatcher:
     def __init__(self, content):
         self.content = content
-
-    @property
-    def title(self):
-        return ''
-
-
-class PlaceContentDispatcher:
-
-    def __init__(self, content):
-        self.content = content
-
-    @property
-    def title(self):
-        return ''
-
-
-class OfferItemContentDispatcher:
-    def get_value_by_re(self, pattern):
-        ms = re.search(pattern, self.content)
-        if ms is None:
-            return None
-        st = ms.group(1).strip()
-        if st == '':
-            return None
-        return st
-
-    def __init__(self, content):
-        self.content = content
-
-    @property
-    def url(self):
-        return 'foo'
-
-    @property
-    def title(self):
-        ptrn = r'<h1 itemprop="name">([\s\S]+?)</h1>'
-        return str(self.get_value_by_re(ptrn))
-
-    @property
-    def amount(self):
-        return 1.1
-
-    @property
-    def price(self):
-        return 2.2
-
-    @property
-    def discount(self):
-        return 3.3
-
-
-class OfferContentDispatcher:
-    def __init__(self, content):
-        self.content = content
-        self.title = self.get_title()
-        self.rules = self.get_rules()
-        self.description = self.get_description()
-        self.items = self.get_items()
-        self.tags = self.get_tags()
-        self.places = self.get_places()
 
     def get_value_by_re(self, pattern, content=None):
         if content is None:
@@ -95,31 +27,106 @@ class OfferContentDispatcher:
             return None
         return st
 
-    def get_values_by_re(self, pattern):
-        ms = re.search(pattern, self.content)
+    def get_values_by_re(self, pattern, content=None):
+        if content is None:
+            content = self.content
+        ms = re.search(pattern, content)
         if ms is None:
             return None
         return ms.groups()
 
-    def get_title(self):
+
+class MerchantContentDispatcher(ContentDispatcher):
+    @property
+    def name(self):
+        return 'name'
+
+
+class TagContentDispatcher(ContentDispatcher):
+    @property
+    def title(self):
+        return ''
+
+
+class PlaceContentDispatcher(ContentDispatcher):
+    @property
+    def name(self):
+        return self.content['name'].strip()
+
+    @property
+    def address(self):
+        return self.content['address'].strip()
+
+    @property
+    def phones(self):
+        parts = re.findall(r'([\d+])', self.content['phones'].strip())
+        phone = ''.join(parts)
+        phones = [int(phone)]
+        return phones
+
+    @property
+    def latitude(self):
+        return 2.0
+
+    @property
+    def longitude(self):
+        return 3.0
+
+
+class OfferItemContentDispatcher(ContentDispatcher):
+    @property
+    def url(self):
+        ptrn = r'class="kb-deal certificate" href="([^"]+?)"'
+        return str(self.get_value_by_re(ptrn)).strip()
+
+    @property
+    def title(self):
+        ptrn = r'<div class="kb-name">([\s\S]+?)</div>'
+        return str(self.get_value_by_re(ptrn)).strip()
+
+    @property
+    def amount(self):
+        ptrn = r'<div class="kb-price"><span>([\s\d]+?)</span> [\w]+</div>'
+        value = str(self.get_value_by_re(ptrn)).replace(' ', '')
+        return float(value)
+
+    @property
+    def price(self):
+        ptrn = r'<td><span class="kb-h">Стоимость:</span></td>[\s]*<td>[\s]*<span>([\s\d]+?)</span> [\w]+[\s]*</td>'
+        value = str(self.get_value_by_re(ptrn)).replace(' ', '')
+        return float(value)
+
+    @property
+    def discount(self):
+        ptrn = r'<td><span class="kb-h">Скидка:</span></td><td> ([\d]+?)\%</td>'
+        value = str(self.get_value_by_re(ptrn)).replace(' ', '')
+        return float(value)
+
+
+class OfferContentDispatcher(ContentDispatcher):
+    @property
+    def title(self):
         ptrn = r'<h1 itemprop="name">([\s\S]+?)</h1>'
         return self.get_value_by_re(ptrn)
 
-    def get_likes_count(self):
+    @property
+    def likes_count(self):
         ptrn = r'<div class="heart default unregistered biglionHeart" data-deal-id="[\d]+" data-like-qnt="([\d]+?)">'
         count = self.get_value_by_re(ptrn)
         if count is None:
             return None
         return int(count)
 
-    def get_purchases_count(self):
+    @property
+    def purchases_count(self):
         ptrn = r'<div style="background: none; background-position: [^"]+">([\d]+?)<span>'
         count = self.get_value_by_re(ptrn)
         if count is None:
             return None
         return int(count)
 
-    def get_rules(self):
+    @property
+    def rules(self):
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(self.content), parser)
         r = tree.xpath('//div[@class="desc"]')
@@ -143,7 +150,8 @@ class OfferContentDispatcher:
         content = (''.join(content_list)).strip()
         return content
 
-    def get_description(self):
+    @property
+    def description(self):
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(self.content), parser)
         r = tree.xpath('//div[@class="desc"]')
@@ -157,7 +165,8 @@ class OfferContentDispatcher:
         content = (''.join(content_list)).strip()
         return content
 
-    def get_coupon_expiration_date(self):
+    @property
+    def coupon_expiration_date(self):
         ptrn = r'<li>Купон действует <span style="font-weight: bold;">до&nbsp;([\d]+)\.([\d]+)\.([\d]+)</span></li>'
         values = self.get_values_by_re(ptrn)
         if values is None:
@@ -169,7 +178,8 @@ class OfferContentDispatcher:
             tzinfo=timezone.utc
         )
 
-    def get_coupon_beginning_usage_date(self):
+    @property
+    def coupon_beginning_usage_date(self):
         ptrn = r'<li class="important"><span>Купон можно использовать с ([\d]+)\.([\d]+)\.([\d]+). </span></li>'
         values = self.get_values_by_re(ptrn)
         if values is None:
@@ -181,7 +191,8 @@ class OfferContentDispatcher:
             tzinfo=timezone.utc
         )
 
-    def get_items(self):
+    @property
+    def items(self):
         val = self.get_value_by_re(r'<div class="kb-pr-m fr">[\s]+<script type="text/javascript">([\s\S]+?)</script>')
         val = self.get_value_by_re(r'\'content\' : \'([\s\S]+?)<div id=\\"kb-arrow\\"', content=val)
         val = val.replace("\\n'+\n'", '\n')
@@ -196,7 +207,8 @@ class OfferContentDispatcher:
             items_list.append(item)
         return items_list
 
-    def get_images(self):
+    @property
+    def images(self):
         # parser = etree.HTMLParser()
         # tree = etree.parse(StringIO(self.content), parser)
         images = []
@@ -208,7 +220,8 @@ class OfferContentDispatcher:
             images += re.findall(r"'([^']+)',", images_matches.group(1).strip())
         return images
 
-    def get_expiration_date(self):
+    @property
+    def expiration_date(self):
         ptrn = r'<div class="goTimer countdown-timer time" data-ts="([\d]+)"></div>'
         value = self.get_value_by_re(ptrn)
         if value is None:
@@ -216,106 +229,75 @@ class OfferContentDispatcher:
         ts = time.time()
         return datetime.fromtimestamp(ts + int(value), tz=timezone.utc)
 
-    def get_tags(self):
+    @property
+    def tags(self):
         tags = []
         tags.append(TagContentDispatcher(content=''))
         return tags
 
-    def get_places(self):
+    @property
+    def places(self):
+        ptrn = r"var places = ([\s\S]+?);"
+        value = self.get_value_by_re(ptrn)
+        value = value.replace("'", '"')
+        values = json.loads(value)
+        if isinstance(values, list) is False:
+            return []
         places = []
-        places.append(PlaceContentDispatcher(content=''))
+        for data in values:
+            places.append(PlaceContentDispatcher(content=data))
         return places
 
 
-class Offer(AbstractOffer):
-    pass
+class ContentProvider:
+    @staticmethod
+    @contract
+    def get_offer_structure(content: str, url: str) -> OfferEntity:
+        offer = OfferContentDispatcher(content)
+        offer_merchant = MerchantContentDispatcher(content)
+        merchant = MerchantEntity(
+            name=offer_merchant.name
+        )
 
+        currency_entity = CurrencyEntity('RUB')
 
-class ContentProvider(AbstractProvider):
-    def get_urls(self):
-        """
-        Парсит XML фид, и возвращает список найденных url
-        """
-        url = 'http://api.biglion.ru/api.php?method=get_torg_price&type=xml&ctype=all'
-        cache = mem_client.get(url)
-        if cache is not None:
-            print('Loading from cache...')
-            return pickle.loads(cache)
-        print('Loading from net...')
-        request = urllib.request.Request(url)
-        with urllib.request.urlopen(request) as f:
-            print('Parsing...')
-            xml_str = f.read().decode('utf-8')
-            xmldoc = minidom.parseString(xml_str)
-            urls_nodels_list = xmldoc.getElementsByTagName('url')
-            print('Received', len(urls_nodels_list), 'items')
-            urls_str = []
-            for url_node in urls_nodels_list:
-                urls_str.append(url_node.firstChild.nodeValue.strip())
-            cache = mem_client.set(url, pickle.dumps(urls_str), 60 * 60)
-            return urls_str
+        items = []
+        for item in offer.items:
+            items.append(OfferItemEntity(
+                url=item.url,
+                title=item.title,
+                amount=MoneyEntity(item.amount, currency_entity),
+                price=MoneyEntity(item.price, currency_entity),
+                discount=item.discount
+            ))
 
-    def get_total_pages(self, content):
-        """
-        Возвращает количество страниц в разделе, найденные в контенте
-        """
-        mms = re.search(r'<div class="page_pavigation">([\s\S]+?)</div>', content)
-        if mms is None:
-            return None
-        matches = re.findall(r'<a href="/[^"]+/\?page=([\d]+)" data-id="[\d]+">[\d]+</a>', mms.group(1))
-        if matches is None:
-            return None
-        matches = map(int, matches)
-        return max(matches)
+        places = []
+        for place in offer.places:
+            places.append(PlaceEntity(
+                title=place.name,
+                address=place.address,
+                phones=place.phones,
+                latitude=place.latitude,
+                longitude=place.longitude
+            ))
 
-    def get_urls_list(self, content):
-        ptrn = 'href="(http://www.biglion.ru/deals/[^"]+)"'
-        matches = re.findall(ptrn, content)
-        return matches
+        tags = []
+        for tag in offer.tags:
+            tags.append(TagEntity(
+                title=tag.title
+            ))
 
-    def get_urls_from_content(self, content):
-        """
-        Возвращает массив ссылок на записи, найденных в контенте
-        """
-        pass
+        print(type(offer.title), offer.title)
+        offer_entity = OfferEntity(
+            url=url,
+            title=offer.title,
+            rules=offer.rules,
+            description=offer.description,
+            items=items,
+            tags=tags,
+            places=places,
+            merchant=merchant
+        )
 
-    def fill_offer_from_content(self, offer, content):
-        """
-        Заполняет данными объект оффера, на основе полученного контента
-        """
-        content_dispatcher = OfferContentDispatcher(content)
-        offer.title = content_dispatcher.get_title()
-        offer.likes_count = content_dispatcher.get_likes_count()
-        offer.purchases_count = content_dispatcher.get_purchases_count()
-        offer.rules = content_dispatcher.get_rules()
+        return offer_entity
 
-    def get_list_page_structure(self, content):
-        structure = type('offer_structure', (object,), {})()
-        structure.total_pages = self.get_total_pages(content)
-        structure.urls_list = self.get_urls_list(content)
-        return structure
-
-    def get_offer_structure(self, content):
-        return OfferContentDispatcher(content)
-
-    def all(self):
-        urls = self.get_urls()
-        if urls is None:
-            return None
-        offers = []
-        for url in urls:
-            up = urlparse(url)
-            if up.netloc != '':
-                continue
-            if up.path == '':
-                continue
-            print(url)
-            content = self.get_content_by_url(url)
-            offer = Offer()
-            offer.url = url
-            offer.revision_at = datetime.now()
-            self.fill_offer_from_content(offer, content)
-            offers.append(offer)
-        if len(offers) < 1:
-            return None
-        return offers

@@ -8,6 +8,14 @@ STATUS_CHOICES = (
     ('o', 'В обработке'),
 )
 
+class MerchantModel(models.Model):
+    class Meta:
+        db_table = 'merchants'
+    name = models.CharField(max_length=300)
+    site_url = models.CharField(max_length=300)
+    work_hours = models.CharField(max_length=300)
+    phone_number = models.CharField(max_length=300)
+
 
 class Offer(models.Model):
     class Meta:
@@ -23,7 +31,7 @@ class Offer(models.Model):
     coupon_expiration_date = models.DateTimeField(blank=True, null=True)
     coupon_beginning_usage_date = models.DateTimeField(blank=True, null=True)
     status = models.CharField(max_length=1, choices=STATUS_CHOICES, null=True, default='o')
-    merchant = models.ForeignKey('Merchant', null=True, blank=True)
+    merchant = models.ForeignKey(MerchantModel)
 
 
 class OfferProperty(models.Model):
@@ -35,14 +43,14 @@ class OfferProperty(models.Model):
     value = models.CharField(max_length=300)
 
 
-class OfferItem(models.Model):
+class OfferItemModel(models.Model):
     class Meta:
         db_table = 'offers_items'
     title = models.CharField(max_length=500)
-    #purchases_count = models.IntegerField()
-    purchase_url = models.CharField(max_length=300, blank=True, null=True)
-    discount_value = models.FloatField()
-    price_value = models.FloatField()
+    url = models.CharField(max_length=300)
+    amount = models.FloatField()
+    price = models.FloatField()
+    discount = models.FloatField()
     offer = models.ForeignKey('Offer')
 
 
@@ -53,17 +61,13 @@ class OfferMedia(models.Model):
     offer = models.ForeignKey('Offer')
 
 
-class Merchant(models.Model):
-    class Meta:
-        db_table = 'merchants'
-    name = models.CharField(max_length=300)
-    site_url = models.CharField(max_length=300)
-    work_hours = models.CharField(max_length=300)
-    phone_number = models.CharField(max_length=300)
-
-
 class Place(models.Model):
     class Meta:
         db_table = 'places'
-    merchant = models.ForeignKey('Merchant')
-    data = models.TextField()
+    merchant = models.ForeignKey('MerchantModel')
+    offer = models.ForeignKey('Offer'),
+    title = models.CharField(max_length=300),
+    address = models.CharField(max_length=300),
+    phones = models.CharField(max_length=300),
+    latitude = models.FloatField(),
+    longitude = models.FloatField()

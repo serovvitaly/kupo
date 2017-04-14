@@ -17,4 +17,6 @@ class OfferEntityTestCase(TestCase):
         html_repository = HtmlOfferRepository()
         sql_repository = SqlOfferRepository()
         offer_entity = html_repository.get_by_url('http://www.kupibonus.ru/actions/spa/den-razvlecheniy-v-akvap/')
+        #for item in offer_entity.places:
+        #    print(item.phones)
         sql_repository.add(offer_entity)

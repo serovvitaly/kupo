@@ -3,6 +3,7 @@ from services.offer import *
 from contracts import contract
 from services.parser import Parser
 from offers.models import *
+from django.db import transaction, connection
 
 
 class OfferRepository(metaclass=ABCMeta):
@@ -18,14 +19,40 @@ class OfferRepository(metaclass=ABCMeta):
 class SqlOfferRepository(OfferRepository):
     @contract
     def add(self, offer_entity: OfferEntity):
-        offer = Offer(
-            url=offer_entity.url,
-            title=offer_entity.title,
-            rules=offer_entity.rules,
-            description=offer_entity.description
-        )
-        offer.save(force_insert=True)
-        print('OfferID:', offer.id)
+
+        with transaction.atomic():
+
+            merchant = MerchantModel()
+            merchant.name = offer_entity.merchant.name
+            merchant.save()
+
+            offer = Offer(merchant=merchant)
+            offer.url = offer_entity.url + '3f',
+            offer.title = 'HELLO', # offer_entity.title,
+            offer.rules = offer_entity.rules,
+            offer.description = offer_entity.description
+            offer.save()
+
+            for item in offer_entity.items:
+                offer_item = OfferItemModel(offer=offer)
+                offer_item.title = item.title,
+                offer_item.url = item.url,
+                #offer_item.discount = item.discount,
+                offer_item.price = 1,
+                offer_item.amount = item.amount.value
+                offer_item.save()
+
+            for place_ent in offer_entity.places:
+                place = Place()
+                place.offer = offer
+                place.merchant = merchant
+                place.title = place_ent.title
+                place.address = place_ent.address
+                place.phones = ','.join(str(phone) for phone in place_ent.phones)
+                place.latitude = place_ent.latitude
+                place.longitude = place_ent.longitude
+                place.save()
+
         return self
 
     @contract
