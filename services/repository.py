@@ -17,8 +17,8 @@ class OfferRepository(metaclass=ABCMeta):
 
 
 class SqlOfferRepository(OfferRepository):
-    @contract
-    def add(self, offer_entity: OfferEntity):
+    #@contract
+    def add(self, offer_entity):
 
         with transaction.atomic():
 
@@ -27,18 +27,18 @@ class SqlOfferRepository(OfferRepository):
             merchant.save()
 
             offer = Offer(merchant=merchant)
-            offer.url = offer_entity.url + '3f',
-            offer.title = 'HELLO', # offer_entity.title,
-            offer.rules = offer_entity.rules,
+            offer.url = offer_entity.url
+            offer.title = offer_entity.title
+            offer.rules = offer_entity.rules
             offer.description = offer_entity.description
             offer.save()
 
             for item in offer_entity.items:
                 offer_item = OfferItemModel(offer=offer)
-                offer_item.title = item.title,
-                offer_item.url = item.url,
-                #offer_item.discount = item.discount,
-                offer_item.price = 1,
+                offer_item.title = item.title
+                offer_item.url = item.url
+                offer_item.discount = item.discount
+                offer_item.price = 1
                 offer_item.amount = item.amount.value
                 offer_item.save()
 

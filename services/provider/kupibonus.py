@@ -287,7 +287,6 @@ class ContentProvider:
                 title=tag.title
             ))
 
-        print(type(offer.title), offer.title)
         offer_entity = OfferEntity(
             url=url,
             title=offer.title,
