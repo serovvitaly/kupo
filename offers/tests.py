@@ -14,9 +14,12 @@ class OfferEntityTestCase(TestCase):
         pass
 
     def test_constructor(self):
-        html_repository = HtmlOfferRepository()
-        sql_repository = SqlOfferRepository()
-        offer_entity = html_repository.get_by_url('http://www.kupibonus.ru/actions/spa/den-razvlecheniy-v-akvap/')
-        #for item in offer_entity.places:
-        #    print(item.phones)
-        sql_repository.add(offer_entity)
+        html_repository = HtmlOfferRepository('kupikupon')
+        offer_entity = html_repository.get_by_url(
+            'https://kupikupon.ru/deals/yakitoriya-271970'
+        )
+        offer_entity = html_repository.get_by_url(
+            'https://kupikupon.ru/deals/more-on-269730'
+        )
+        #sql_repository = SqlOfferRepository()
+        #sql_repository.add(offer_entity)

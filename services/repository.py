@@ -61,14 +61,22 @@ class SqlOfferRepository(OfferRepository):
 
 
 class HtmlOfferRepository(OfferRepository):
+
+    @contract
+    def __init__(self, provider_name: str):
+        self.set_provider_name(provider_name)
+
+    @contract
+    def set_provider_name(self, provider_name: str):
+        self.parser = Parser(provider_name)
+
     @contract
     def add(self, offer_entity: OfferEntity):
         return self
 
     @contract
     def get_by_url(self, url: str) -> OfferEntity:
-        parser = Parser('kupibonus')
-        return parser.get_offer_entity_by_url(url)
+        return self.parser.get_offer_entity_by_url(url)
 
 
 class MemcacheOfferRepository(OfferRepository):

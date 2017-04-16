@@ -31,13 +31,14 @@ class MerchantEntity:
 
 class OfferItemEntity:
     @contract
-    def __init__(self,
-                 url: NotEmptyString,
-                 title: NotEmptyString,
-                 amount: MoneyEntityContract,
-                 price: MoneyEntityContract,
-                 discount: float
-                 ):
+    def __init__(self, url, title, amount, price, discount):
+        """
+        :type url: NotEmptyString
+        :type title: NotEmptyString
+        :type amount: MoneyEntityContract|None
+        :type price: MoneyEntityContract
+        :type discount: float
+        """
         self.url = url
         self.title = title
         self.amount = amount
@@ -53,15 +54,13 @@ class TagEntity:
 
 class PlaceEntity:
     @contract
-    def __init__(self, title, address, phones, latitude, longitude):
+    def __init__(self, address, phones, latitude, longitude):
         """
-        :type title: NotEmptyString
         :type address: NotEmptyString
         :type phones: list(int)
         :type latitude: float
         :type longitude: float
         """
-        self.title = title
         self.address = address
         self.phones = phones
         self.latitude = latitude
