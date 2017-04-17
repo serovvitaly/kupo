@@ -14,7 +14,7 @@ import json
 
 class ContentDispatcher:
     def __init__(self, content, soup=False):
-        self.content = content
+        self.content = str(content)
         if soup is True:
             self.soup = BeautifulSoup(self.content, 'html.parser')
 
@@ -44,6 +44,18 @@ class MerchantContentDispatcher(ContentDispatcher):
         return 'name'
 
 
+class ImageContentDispatcher(ContentDispatcher):
+    @property
+    def src(self):
+        src = self.get_value_by_re(r'src="([^"]+?)"')
+        return str(src).strip()
+
+    @property
+    def alt(self):
+        src = self.get_value_by_re(r'alt="([^"]+?)"')
+        return str(src).strip()
+
+
 class TagContentDispatcher(ContentDispatcher):
     @property
     def title(self):
@@ -68,19 +80,30 @@ class PlaceContentDispatcher(ContentDispatcher):
 
     @property
     def phones(self):
-        return [1,2]
-        parts = re.findall(r'([\d+])', self.content['phones'].strip())
-        phone = ''.join(parts)
-        phones = [int(phone)]
+        parts = self.soup.find(class_='adrtab t').contents
+        if len(parts) < 1:
+            return None
+        phones = []
+        parts = parts[0].split('\r\n')
+        for part in parts:
+            part = re.findall(r'([\d+])', part)
+            phones.append(int(''.join(part)))
         return phones
 
     @property
+    def work_times(self):
+        work_times = self.soup.find(class_='adrtab c').contents
+        if len(work_times) < 1:
+            return None
+        return work_times[0].strip()
+
+    @property
     def latitude(self):
-        return 2.0
+        return None
 
     @property
     def longitude(self):
-        return 3.0
+        return None
 
 
 class OfferItemContentDispatcher(ContentDispatcher):
@@ -107,7 +130,11 @@ class OfferItemContentDispatcher(ContentDispatcher):
         price = self.soup.find(class_='cost').contents
         if len(price) < 1:
             return None
-        return float(price[0].strip())
+        parts = re.findall(r'([\d+])', price[0])
+        if len(parts) < 1:
+            return None
+        price = ''.join(parts)
+        return float(price)
 
     @property
     def discount(self):
@@ -172,16 +199,14 @@ class OfferContentDispatcher(ContentDispatcher):
 
     @property
     def images(self):
-        return []
-        # parser = etree.HTMLParser()
-        # tree = etree.parse(StringIO(self.content), parser)
+        imgs = self.soup.find(class_='deal_logo_wrapper').find_all('img')
+        if len(imgs) < 1:
+            return []
         images = []
-        base_image_matches = re.search(r'var image_big = "([^"]+)"', self.content)
-        if base_image_matches is not None:
-            images.append(base_image_matches.group(1))
-        images_matches = re.search(r'var photos_big = \[([^\]]+)\];', self.content)
-        if images_matches is not None:
-            images += re.findall(r"'([^']+)',", images_matches.group(1).strip())
+        for img in imgs:
+            images.append(
+                ImageContentDispatcher(img)
+            )
         return images
 
     @property
@@ -211,6 +236,19 @@ class OfferContentDispatcher(ContentDispatcher):
 
 
 class ContentProvider:
+
+    def get_entry_point_url(self):
+        return ''
+
+    @staticmethod
+    @contract
+    def get_entry_urls(content: str):
+        ptrn = r'<a href="([^"]+?)" class="role-change_category" data-id="[\d]+" data-parent-id="[\d]+" ' \
+               r'id="category_[\d]+"><span class="name">[^<]+?</span>[\s]*<span class="counter">[\d]+</span>[' \
+               r'\s]*</a>'
+        res = re.findall(ptrn, content)
+        return res
+
     @staticmethod
     @contract
     def get_offer_structure(content: str, url: str) -> OfferEntity:
@@ -228,11 +266,6 @@ class ContentProvider:
             amount = None
             if item.amount is not None:
                 amount = MoneyEntity(item.amount, currency_entity)
-            print(item.url)
-            print(item.title)
-            print(item.amount)
-            print(item.price)
-            print(item.discount)
             items.append(OfferItemEntity(
                 url=item.url,
                 title=item.title,
@@ -250,6 +283,12 @@ class ContentProvider:
                 longitude=place.longitude
             ))
 
+        images = []
+        for image in offer.images:
+            images.append(ImageEntity(
+                url=image.src
+            ))
+
         tags = []
         for tag in offer.tags:
             tags.append(TagEntity(
@@ -262,6 +301,7 @@ class ContentProvider:
             rules=offer.rules,
             description=offer.description,
             items=items,
+            images=images,
             tags=tags,
             places=places,
             merchant=merchant

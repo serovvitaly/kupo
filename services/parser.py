@@ -8,6 +8,7 @@ import urllib.request
 from offers.models import *
 from datetime import datetime, timezone
 from services.offer import *
+from contracts import contract
 
 from pymemcache.client.base import Client as MemClient
 
@@ -45,7 +46,13 @@ class Parser:
     def get_offer_entity_by_url(self, url):
         content_provider = self.get_content_provider(self.provide_name)
         content = self.get_content_by_url(url, use_cache=True)
-
         offer_entity = content_provider.get_offer_structure(content, url)
-
         return offer_entity
+
+    @staticmethod
+    @contract
+    def get_provider_urls(provider_name: str, base_url: str) -> 'list(str)':
+        parser = Parser(provider_name)
+        content_provider = parser.get_content_provider(provider_name)
+        content = parser.get_content_by_url(base_url)
+        return content_provider.get_entry_urls(content)

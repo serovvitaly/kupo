@@ -17,7 +17,7 @@ class OfferRepository(metaclass=ABCMeta):
 
 
 class SqlOfferRepository(OfferRepository):
-    #@contract
+    # @contract
     def add(self, offer_entity):
 
         with transaction.atomic():
@@ -61,7 +61,6 @@ class SqlOfferRepository(OfferRepository):
 
 
 class HtmlOfferRepository(OfferRepository):
-
     @contract
     def __init__(self, provider_name: str):
         self.set_provider_name(provider_name)

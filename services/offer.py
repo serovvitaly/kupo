@@ -1,6 +1,7 @@
 from contracts import contract, new_contract
 
 OfferItemEntityContract = new_contract('OfferItemEntityContract', 'isinstance(OfferItemEntity)')
+ImageEntityContract = new_contract('ImageEntityContract', 'isinstance(ImageEntity)')
 TagEntityContract = new_contract('TagEntityContract', 'isinstance(TagEntity)')
 PlaceEntityContract = new_contract('PlaceEntityContract', 'isinstance(PlaceEntity)')
 CurrencyEntityContract = new_contract('CurrencyEntityContract', 'isinstance(CurrencyEntity)')
@@ -46,6 +47,12 @@ class OfferItemEntity:
         self.discount = discount
 
 
+class ImageEntity:
+    @contract
+    def __init__(self, url: str):
+        self.url = url
+
+
 class TagEntity:
     @contract
     def __init__(self, title: str):
@@ -57,9 +64,9 @@ class PlaceEntity:
     def __init__(self, address, phones, latitude, longitude):
         """
         :type address: NotEmptyString
-        :type phones: list(int)
-        :type latitude: float
-        :type longitude: float
+        :type phones: list(int)|None
+        :type latitude: float|None
+        :type longitude: float|None
         """
         self.address = address
         self.phones = phones
@@ -69,13 +76,14 @@ class PlaceEntity:
 
 class OfferEntity:
     @contract
-    def __init__(self, url, title, rules, description, items, tags, places, merchant):
+    def __init__(self, url, title, rules, description, items, images, tags, places, merchant):
         """
         :type url: str
         :type title: str
         :type rules: str
         :type description: str
         :type items: list[>0](OfferItemEntityContract)
+        :type images: list(ImageEntityContract)
         :type tags: list[>0](TagEntityContract)
         :type places: list[>0](PlaceEntityContract)
         :type merchant: MerchantEntityContract
@@ -85,6 +93,7 @@ class OfferEntity:
         self.rules = rules.strip()
         self.description = description.strip()
         self.items = items
+        self.images = images
         self.tags = tags
         self.places = places
         self.merchant = merchant
