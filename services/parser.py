@@ -1,14 +1,8 @@
-# from services.provider.biglion import Provider, Offer
-import json
-from urllib.parse import urlparse
 import importlib
-from spider.models import OfferUrl
-# from progress.bar import Bar
 import urllib.request
-from offers.models import *
-from datetime import datetime, timezone
-from services.offer import *
 from contracts import contract
+from spider.models import *
+from services.repository import SqlOfferRepository
 
 from pymemcache.client.base import Client as MemClient
 
@@ -56,3 +50,36 @@ class Parser:
         content_provider = parser.get_content_provider(provider_name)
         content = parser.get_content_by_url(base_url)
         return content_provider.get_entry_urls(content)
+
+    @contract
+    def get_offers_urls(self, url: str) -> 'list(str)':
+        content_provider = self.get_content_provider(self.provide_name)
+        content = self.get_content_by_url(url, use_cache=True)
+        return content_provider.get_offers_urls(content)
+
+    @staticmethod
+    def pull_offers():
+        base_urls = OfferUrl.objects.all()
+        for base_url in base_urls:
+            urls = Parser.get_provider_urls(
+                base_url.offer_provider.provider,
+                base_url.url
+            )
+            for entry_url in urls:
+                entry_url = base_url.url + entry_url
+                provider = Parser(base_url.offer_provider.provider)
+                offers_urls = provider.get_offers_urls(entry_url)
+                if len(offers_urls) < 1:
+                    continue
+                for offer_url in offers_urls:
+                    try:
+                        offer_url = base_url.url + offer_url
+                        print(offer_url)
+                        offer_content = provider.get_content_by_url(offer_url)
+                        content_provider = provider.get_content_provider(base_url.offer_provider.provider)
+                        offer_entity = content_provider.get_offer_structure(offer_content, offer_url)
+                        sql_repository = SqlOfferRepository()
+                        sql_repository.add(offer_entity)
+                    except Exception as e:
+                        print('ERROR:', e.__str__())
+

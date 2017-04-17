@@ -251,6 +251,12 @@ class ContentProvider:
 
     @staticmethod
     @contract
+    def get_offers_urls(content: str) -> 'list(str)':
+        res = re.findall(r'<a class="deal-link" href="([^"]+?)"', content)
+        return res
+
+    @staticmethod
+    @contract
     def get_offer_structure(content: str, url: str) -> OfferEntity:
         offer = OfferContentDispatcher(content, soup=True)
 

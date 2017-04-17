@@ -82,7 +82,7 @@ class OfferEntity:
         :type title: str
         :type rules: str
         :type description: str
-        :type items: list[>0](OfferItemEntityContract)
+        :type items: list[>=0](OfferItemEntityContract)
         :type images: list(ImageEntityContract)
         :type tags: list[>0](TagEntityContract)
         :type places: list[>0](PlaceEntityContract)
