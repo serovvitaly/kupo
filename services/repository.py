@@ -34,19 +34,24 @@ class SqlOfferRepository(OfferRepository):
             offer.save()
 
             for item in offer_entity.items:
+                amount = None
+                if item.amount is not None:
+                    amount = item.amount.value
+                price = None
+                if item.price is not None:
+                    price = item.price.value
                 offer_item = OfferItemModel(offer=offer)
                 offer_item.title = item.title
                 offer_item.url = item.url
                 offer_item.discount = item.discount
-                offer_item.price = 1
-                offer_item.amount = item.amount.value
+                offer_item.price = price
+                offer_item.amount = amount
                 offer_item.save()
 
             for place_ent in offer_entity.places:
                 place = Place()
                 place.offer = offer
                 place.merchant = merchant
-                place.title = place_ent.title
                 place.address = place_ent.address
                 place.phones = ','.join(str(phone) for phone in place_ent.phones)
                 place.latitude = place_ent.latitude

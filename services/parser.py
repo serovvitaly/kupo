@@ -2,7 +2,8 @@ import importlib
 import urllib.request
 from contracts import contract
 from spider.models import *
-from services.repository import SqlOfferRepository
+from services.repository import *
+import sys
 
 from pymemcache.client.base import Client as MemClient
 
@@ -81,5 +82,5 @@ class Parser:
                         sql_repository = SqlOfferRepository()
                         sql_repository.add(offer_entity)
                     except Exception as e:
-                        print('ERROR:', e.__str__())
+                        print('ERROR:', e.__str__(), sys.exc_info())
 

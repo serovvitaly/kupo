@@ -272,11 +272,14 @@ class ContentProvider:
             amount = None
             if item.amount is not None:
                 amount = MoneyEntity(item.amount, currency_entity)
+            price = None
+            if item.price is not None:
+                price = MoneyEntity(item.price, currency_entity)
             items.append(OfferItemEntity(
                 url=item.url,
                 title=item.title,
                 amount=amount,
-                price=MoneyEntity(item.price, currency_entity),
+                price=price,
                 discount=item.discount
             ))
 

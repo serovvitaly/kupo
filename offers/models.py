@@ -48,9 +48,9 @@ class OfferItemModel(models.Model):
         db_table = 'offers_items'
     title = models.CharField(max_length=500)
     url = models.CharField(max_length=300)
-    amount = models.FloatField()
-    price = models.FloatField()
-    discount = models.FloatField()
+    amount = models.FloatField(null=True, blank=True)
+    price = models.FloatField(null=True, blank=True)
+    discount = models.FloatField(null=True, blank=True)
     offer = models.ForeignKey('Offer')
 
 
@@ -69,5 +69,5 @@ class Place(models.Model):
     title = models.CharField(max_length=300),
     address = models.CharField(max_length=300),
     phones = models.CharField(max_length=300),
-    latitude = models.FloatField(),
-    longitude = models.FloatField()
+    latitude = models.FloatField(null=True, blank=True),
+    longitude = models.FloatField(null=True, blank=True)
