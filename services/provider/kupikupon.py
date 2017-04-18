@@ -11,6 +11,8 @@ from services.offer import *
 from contracts import contract
 import json
 
+BASE_URL = 'https://kupikupon.ru'
+
 
 class ContentDispatcher:
     def __init__(self, content, soup=False):
@@ -295,7 +297,7 @@ class ContentProvider:
         images = []
         for image in offer.images:
             images.append(ImageEntity(
-                url=image.src
+                url=BASE_URL+image.src
             ))
 
         tags = []
