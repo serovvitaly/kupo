@@ -148,8 +148,11 @@ class OfferItemContentDispatcher(ContentDispatcher):
 class OfferContentDispatcher(ContentDispatcher):
     @property
     def title(self):
-        ptrn = r'<h1 itemprop="name">[\s]*<p>([\s\S]+?)<'
-        return self.get_value_by_re(ptrn)
+        contents = []
+        for content in self.soup.find(itemprop='name').p.contents:
+            contents.append(content.string)
+        title = ''.join(contents).strip()
+        return title
 
     @property
     def rules(self):

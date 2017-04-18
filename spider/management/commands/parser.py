@@ -15,7 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
 
         sql_repository = SqlOfferRepository()
-        base_urls = OfferUrl.objects.all()
+        base_urls = OfferUrl.objects.filter(is_supervised__exact=True).all()
         for base_url in base_urls:
             urls = Parser.get_provider_urls(
                 base_url.offer_provider.provider,
