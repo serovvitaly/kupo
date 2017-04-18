@@ -22,6 +22,11 @@ class Command(BaseCommand):
                 base_url.url
             )
             for entry_url in urls:
+                prs.insert_one({
+                    'url': entry_url,
+                    'type': 'parsing',
+                    'created_at': datetime.now(),
+                })
                 entry_url = base_url.url + entry_url
                 provider = Parser(base_url.offer_provider.provider)
                 html_repository = HtmlOfferRepository(base_url.offer_provider.provider)
