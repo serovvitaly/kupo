@@ -278,7 +278,7 @@ class ContentProvider:
             if item.price is not None:
                 price = MoneyEntity(item.price, currency_entity)
             items.append(OfferItemEntity(
-                url=item.url,
+                url=BASE_URL+item.url,
                 title=item.title,
                 amount=amount,
                 price=price,
