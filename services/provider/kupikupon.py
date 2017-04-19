@@ -116,7 +116,6 @@ class OfferItemContentDispatcher(ContentDispatcher):
 
     @property
     def title(self):
-
         contents = []
         for content in self.soup.find(class_='side-info').p.contents:
             contents.append(content.string)
