@@ -116,8 +116,12 @@ class OfferItemContentDispatcher(ContentDispatcher):
 
     @property
     def title(self):
-        title = self.soup.find(class_='side-info').p.contents[0]
-        return title.strip()
+
+        contents = []
+        for content in self.soup.find(class_='side-info').p.contents:
+            contents.append(content.string)
+        title = ''.join(contents).strip()
+        return title
 
     @property
     def amount(self):
