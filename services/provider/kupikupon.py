@@ -9,7 +9,7 @@ from io import StringIO
 from bs4 import BeautifulSoup
 from services.offer import *
 from contracts import contract
-import json
+from urllib.parse import urlparse
 
 BASE_URL = 'https://kupikupon.ru'
 
@@ -312,8 +312,11 @@ class ContentProvider:
                 title=tag.title
             ))
 
+        url_parts = urlparse(url)
+        offer_url = BASE_URL + url_parts['path']
+
         offer_entity = OfferEntity(
-            url=url,
+            url=offer_url,
             title=offer.title,
             rules=offer.rules,
             description=offer.description,
