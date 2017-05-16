@@ -17,7 +17,7 @@ class OfferProviderAdmin(admin.ModelAdmin):
     list_display = ['title', 'damail_link', 'affiliate_program_link', 'provider']
 
     def damail_link(self, rec):
-        return '<a target="_blank" href="http://'+rec.domain+'">'+rec.domain+'</a>'
+        return '<a target="_blank" href="'+rec.domain+'">'+rec.domain+'</a>'
     damail_link.allow_tags = True
 
     def affiliate_program_link(self, rec):

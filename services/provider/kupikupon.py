@@ -313,7 +313,7 @@ class ContentProvider:
             ))
 
         url_parts = urlparse(url)
-        offer_url = BASE_URL + url_parts['path']
+        offer_url = BASE_URL + url_parts.path
 
         offer_entity = OfferEntity(
             url=offer_url,

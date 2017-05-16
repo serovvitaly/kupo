@@ -47,5 +47,6 @@ class Command(BaseCommand):
                             'url': offer_url,
                             'type': 'error',
                             'message': e.__str__(),
+                            'traceback': traceback.format_exc(),
                             'created_at': datetime.now(),
                         })
