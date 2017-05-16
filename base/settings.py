@@ -32,6 +32,7 @@ ALLOWED_HOSTS = env.ALLOWED_HOSTS
 # Application definition
 
 INSTALLED_APPS = [
+    'zalipay.apps.ZalipayConfig',
     'spider.apps.SpiderConfig',
     'offers.apps.OffersConfig',
     'django.contrib.admin',
@@ -80,6 +81,7 @@ WSGI_APPLICATION = 'base.wsgi.application'
 
 DATABASES = env.DATABASES
 
+DATABASE_ROUTERS = ['zalipay.models.ZalipayRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
