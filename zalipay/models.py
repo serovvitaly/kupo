@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 
 
 class ZalipayRouter(object):
@@ -18,6 +19,7 @@ class Post(models.Model):
         db_table = 'documents'
     title = models.CharField(max_length=300)
     content = models.TextField()
+    meta_data = JSONField()
     ribbon = models.ForeignKey('Ribbon')
 
 
