@@ -3,8 +3,8 @@ from spider.models import OfferUrl, OfferProvider
 
 class OfferUrlAdmin(admin.ModelAdmin):
     list_per_page = 20
-    list_display = ['id', 'url_link', 'offer_provider', 'created_at']
-    list_filter = ['offer_provider']
+    list_display = ['id', 'url_link', 'offer_provider', 'created_at', 'is_supervised']
+    list_filter = ['offer_provider', 'is_supervised']
 
     def url_link(self, rec):
         return '<a target="_blank" href="'+rec.url+'">'+rec.url+'</a>'

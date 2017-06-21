@@ -58,6 +58,12 @@ class Parser:
         content = self.get_content_by_url(url, use_cache=True)
         return content_provider.get_offers_urls(content)
 
+    @contract
+    def get_pages_count(self, url: str) -> int:
+        content_provider = self.get_content_provider(self.provide_name)
+        content = self.get_content_by_url(url, use_cache=True)
+        return content_provider.get_pages_count(content)
+
     @staticmethod
     def pull_offers():
         base_urls = OfferUrl.objects.all()

@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 import urllib.request
 from xml.dom import minidom
 from urllib.parse import urlparse
-from models.base import AbstractOffer, AbstractProvider
 import lxml.etree as etree
 from io import StringIO
+from contracts import contract
 
 from pymemcache.client.base import Client as MemClient
 mem_client = MemClient(('localhost', 11211))
@@ -120,14 +120,11 @@ class ContentDispatcher:
     def get_items(self):
         parser = etree.HTMLParser()
         tree = etree.parse(StringIO(self.content), parser)
-        blocks_els_list = tree.xpath('//div[@class="modal_block_wrap"]/div[@class="modal_hidden"]/div[@class="modal_block"]')
+        blocks_els_list = tree.xpath('//div[@class="modal_block_wrap"]/div[@class="modal_hidden"]/div[@class="modal_block nost_v4"]')
         if len(blocks_els_list) < 1:
             return []
         items = []
         for block_el in blocks_els_list:
-            modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
-            purchases_count = re.search('куплено ([\d]+)', modal_2.text.strip())
-            purchases_count = purchases_count.group(1)
 
             modal_3 = block_el.find('div[@class="modal_3"]')
             link_el = modal_3.find('a')
@@ -146,7 +143,13 @@ class ContentDispatcher:
             offer_item = type('offer_item', (object,), {})()
 
             offer_item.title = offer_item_title
-            offer_item.purchases_count = purchases_count
+
+            modal_2 = block_el.find('div[@class="modal_1"]/div[@class="modal_2"]/div[@class="already_buyed"]')
+            if modal_2 is not None:
+                purchases_count = re.search('куплено ([\d]+)', modal_2.text.strip())
+                purchases_count = purchases_count.group(1)
+                offer_item.purchases_count = purchases_count
+
             offer_item.purchase_url = purchase_url
             offer_item.discount_value = discount_value
             offer_item.price_value = price_value
@@ -240,11 +243,35 @@ class ContentDispatcher:
         return merchant_obj
 
 
-class Offer(AbstractOffer):
+class Offer:
     pass
 
 
-class ContentProvider(AbstractProvider):
+class ContentProvider:
+
+    @staticmethod
+    @contract
+    def get_entry_urls(content: str):
+        ptrn = r'<a style="color: #333; text-decoration: none" rel="nofollow" href="([^"]+)">'
+        res = re.findall(ptrn, content)
+        return res
+
+    @staticmethod
+    @contract
+    def get_offers_urls(content: str) -> 'list(str)':
+        ptrn = r'<a style="color: #333; text-decoration: none" rel="nofollow" href="([^"]+)">'
+        res = re.findall(ptrn, content)
+        res = list(set(res))
+        return res
+
+    @staticmethod
+    @contract
+    def get_pages_count(content: str) -> int:
+        res = re.findall(r'<a href="[^"]*" data-id="([\d]+)">[\d]+</a>', content)
+        if len(res) < 1:
+            return 1
+        res = [int(p) for p in res]
+        return max(res)
 
     def get_urls(self):
         """

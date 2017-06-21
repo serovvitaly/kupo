@@ -43,6 +43,7 @@ class Command(BaseCommand):
                         # exc_type, exc_value, exc_traceback = sys.exc_info()
                         # traceback.print_exception(exc_type, exc_value, exc_traceback)
                         print('ERROR:', e.__str__())
+                        continue
                         prs.insert_one({
                             'url': offer_url,
                             'type': 'error',
