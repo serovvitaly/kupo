@@ -41,10 +41,20 @@ class Command(BaseCommand):
 
                     offer_items = offer_content_disp.get_items()
 
+                    offer_items_data = []
+
                     for offer_item in offer_items:
                         data = offer_item.__dict__
-                        data['offer_url'] = offer_url
-                        data['created_at'] = datetime.now()
-                        db.offers_items.insert_one(data)
+                        offer_items_data.append(data)
+
+                    offer_data = {
+                        'title': offer_content_disp.get_title(),
+                        'rules': offer_content_disp.get_rules(),
+                        'offer_url': offer_url,
+                        'created_at': datetime.now(),
+                        'items': offer_items_data,
+                    }
+
+                    db.offers.insert_one(offer_data)
 
 

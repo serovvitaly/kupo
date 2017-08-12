@@ -137,8 +137,8 @@ class ContentDispatcher:
             modal_discount = modal_3.findall('div[@class="description_modal_discount"]/b/em')
             if len(modal_discount) < 1:
                 continue
-            discount_value = re.search('([\d]+)', modal_discount[0].text.strip()).group(1)
-            price_value = re.search('([\d]+)', modal_discount[1].text.strip()).group(1)
+            price_value = re.search('([\d]+)', modal_discount[0].text.strip()).group(1)
+            discount_value = re.search('([\d]+)', modal_discount[1].text.strip()).group(1)
 
             offer_item = type('offer_item', (object,), {})()
 
