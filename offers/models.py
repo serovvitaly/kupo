@@ -8,6 +8,10 @@ STATUS_CHOICES = (
     ('o', 'В обработке'),
 )
 
+ORIGINAL_SYSTEM_CHOICES = (
+    ('bg', 'Бугага'),
+)
+
 class MerchantModel(models.Model):
     class Meta:
         db_table = 'merchants'
@@ -15,6 +19,32 @@ class MerchantModel(models.Model):
     site_url = models.CharField(max_length=300)
     work_hours = models.CharField(max_length=300)
     phone_number = models.CharField(max_length=300)
+    original_system = models.CharField(max_length=3, choices=ORIGINAL_SYSTEM_CHOICES, null=True)
+    original_id = models.IntegerField(blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Source(models.Model):
+    class Meta:
+        db_table = 'sources'
+    title = models.CharField(max_length=300)
+    system_name = models.CharField(max_length=300, unique=True)
+
+    def __str__(self):
+        return self.title
+
+class MerchantReviewSource(models.Model):
+    class Meta:
+        db_table = 'merchants_reviews_sources'
+    title = models.CharField(max_length=300)
+    url = models.CharField(max_length=300)
+    source_type = models.ForeignKey(Source)
+    merchant = models.ForeignKey(MerchantModel)
+
+    def __str__(self):
+        return self.title
 
 
 class Offer(models.Model):
